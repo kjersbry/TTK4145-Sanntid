@@ -1,4 +1,6 @@
-Run in: https://rextester.com/AWD84754
+**Run in: https://rextester.com/AWD84754**
 
-Results: 
-C: Lots of weird numbers, sometimes zero
+**Results:**
+
+*C:* 
+Lots of weird numbers, sometimes zero
