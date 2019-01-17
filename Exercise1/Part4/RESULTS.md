@@ -3,10 +3,13 @@
 **Results:**
 
 *C:* 
-Lots of weird numbers, sometimes zero
+Lots of weird numbers, postive and negative, sometimes zero
 
 *Go:*
-Some weird numbers, but a little more zeroes (which is probably good)
+Lots of weird numbers,postive and negative, but a little more zeroes? (which is probably good)
 
 *Python:*
 Never zero. Always like 1 000 000 +
+
+
+The threads aren't "synchronized"/this concurrency isn't a very good simulation of parallellism? So the threads sometimes increments/decrements more
