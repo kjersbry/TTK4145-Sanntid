@@ -1,6 +1,9 @@
 #include <pthread.h>
 #include <stdio.h>
 
+
+//clang -o foo foo.c -lpthread
+
 int i = 0;
 
 // Note the return type: void*
