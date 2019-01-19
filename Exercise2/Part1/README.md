@@ -23,6 +23,8 @@ Avoiding race conditions. Semaphore is a generalized mutex. Synchronization
 ### What is a critical section?
 > The part of a program that accesses shared resources. A process can only interrupt other processes when it is in the critical section. 
 
+>Possible correction from BW: A sequence of statements that must (appear) be treated indivisibly. 
+
 ### What is the difference between race conditions and data races?
  > Data race: Two or more threads are writing to the same memory location, and the read and write processes doesn't happen in the right order because of lacking synchronization. Example: process 1 reads the variable and gets ready to write the new value, but process 2 reads the value before process 1 writes, and process 2 therefore has the wrong input
  
