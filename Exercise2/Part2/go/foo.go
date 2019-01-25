@@ -24,7 +24,7 @@ func number_server(add_number <-chan int, control <-chan int, number chan<- int)
 		case receive:= <- control:
 			if receive == GetNumber {
 				number <- i //send number
-			} else if receive == Exit{
+			} else if receive == Exit {
 				return;
 			}
 		}
