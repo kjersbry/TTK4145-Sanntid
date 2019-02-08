@@ -5,10 +5,12 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net"
+	"os"
 )
-//import "net"
+//import 
 
-//import "os"
+//import 
 
 /*Move enum and struct to other module!!!*/
 type Direction int
@@ -27,19 +29,18 @@ type Order struct { //default init?
 }
 /****************************************/
 func UDP_send_order(ip string, port int, order Order){
-	var packet bytes.Buffer
-	enc := gob.NewEncoder(&packet)
+	var buffer bytes.Buffer
+	enc := gob.NewEncoder(&buffer)
 
 	err:= enc.Encode(Order{11,2,UP, false, 4})
 	if err!= nil{
 		log.Fatal("encode error: ", err)
 	}
 
-
-
 	addr := fmt.Sprintf("%s:%d", ip, port)
 	sock, _ := net.Dial("udp", addr)
-	sock.Write(packet)
+	msg, _:= bytes.ReadBytes(&buffer)
+	sock.Write(msg)
 }
 
 
@@ -52,8 +53,11 @@ func UDP_receive_order(port int){
 		os.Exit(0)
 	}
 
-	buffer:= make([]byte, 1024)
-	listen.ReadFrom(buffer)
+	msg:= make([]byte, 1024)
+	listen.ReadFrom(msg)
+
+	var buffer bytes.Buffer
+	buffer.Write(msg)
 
 	dec := gob.NewDecoder(&buffer)
 	var ord Order
@@ -72,29 +76,6 @@ func UDP_receive_order(port int){
 
 
 
-
-
-
 func main() {
-	var packet bytes.Buffer
-	enc := gob.NewEncoder(&network)
-
-	err:= enc.Encode(Order{11,2,UP, false, 4})
-	if err!= nil{
-		log.Fatal("encode error: ", err)
-	}
-
-
-	sock.Write(packet)
-
-
-	dec := gob.NewDecoder(&network)
-	var ord Order
-	err = dec.Decode(&ord)
-	if err!= nil{
-		log.Fatal("encode error: ", err)
-	}
-
-	fmt.Printf("ID: %d, Floor: %d, Cab: %d\n", ord.Order_ID, ord.Floor, ord.Cab_num)
 
 }
