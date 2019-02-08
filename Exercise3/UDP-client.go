@@ -7,6 +7,7 @@ import "os"
 //SERVER IP: 10.100.23.242
 const SERVER_IP = "10.100.23.242"
 
+
 func UDPclient_serverdial(ip string, port int){
 	addr := fmt.Sprintf("%s:%d", ip, port)
 	sock, _ := net.Dial("udp", addr)
