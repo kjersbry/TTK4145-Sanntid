@@ -1,0 +1,43 @@
+Greedy_scan_algorithm (initialpaths []int, unhandled_orders []order)           //psedou code
+  paths = initial_paths
+
+
+//Adding "obvious" orders. That is, ohall orders that lies between two cab orders (from the same elevator),
+or hall orders that corresponds with cab orders
+and a probably a few other cases
+for every unhandled_order i
+  for every path j
+    if order i lies within a path j
+      add order to path
+    if order is ON a path
+      remove set order to handled
+
+//The greedy part
+while (unhandled orders remains)
+   
+   var current_best_path
+   var current_shortest_time
+   var current_time
+   
+   for every order i {            //Some orders can safley be skipped.
+      for every elevator/path j
+        current_path = path j, augumented by order i 
+        (the properties of the scan algorithm  must hold.)
+        
+        current_time = calculate how much time it takes befor the order can be satisfied. Acheived with predefined function
+        
+        if current_time < current_shortest_time
+           current_shortest_time = current_time
+           current_best_path = current_path     
+   }
+   
+   make the best path found after the loop permanent
+   remove the corresponding order from the undhandled order list
+   
+    //This loops thorugh every order. The paths are augumented with one order at the time
+    
+    
+    //some additional thoughts: This algorithm has a lot of pitfalls. Further, it's not optimal. Another important point is that the 
+    problem only has the greedyalgorithm property if choice your objective function to have the greedyalgorithm property. i.e you could
+    the problem in such a way that it does not have the property.
+    What we chooce to weight is also up to us. But again, this dosen't have to be optimal. It just have to work.
