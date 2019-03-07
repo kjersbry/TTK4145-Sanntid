@@ -4,7 +4,7 @@ import "time"
 import "sync"
 import "net"
 import "fmt"
-import "globalconstants"
+import "./globalconstants"
 
 
 const _pollRate = 20 * time.Millisecond

@@ -1,6 +1,6 @@
 package fsm
-import "orders"
-import "elevatorstates"
+import "./orders"
+import "./elevatorstates"
 
 //doors and lights
 

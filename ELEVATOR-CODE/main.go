@@ -1,7 +1,7 @@
 package main
 
-import "elevio"
-import "globalconstants"
+import "./elevio"
+import "./globalconstants"
 
 func main(){
 	//initialization

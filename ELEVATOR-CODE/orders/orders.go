@@ -1,5 +1,5 @@
 package orders
-import "elevio"
+import "./elevio"
 /*orders should not have direct access to elevatorstates, I think?
 should rather be passed only as args floor and direction from fsm
 

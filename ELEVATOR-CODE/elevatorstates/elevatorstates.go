@@ -1,5 +1,5 @@
 package elevatorstates
-import "elevio"
+import "./elevio"
 
 typedef enum {
     ES_Idle,
