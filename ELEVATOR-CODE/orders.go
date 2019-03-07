@@ -1,88 +1,103 @@
 package orders
 import "elevio"
-import "elevatorstates"
+/*orders should not have direct access to elevatorstates, I think?
+should rather be passed only as args floor and direction from fsm
 
+But, it may be prettier that the funcs that need floor and
+dir takes elevator as argument from fsm. 
+*/
 
-//init orders??:
+//trengs det noe init orders??:
 var orders[N_FLOORS][N_BUTTONS] bool = {false}
 
-func OrderServer(/*channels for write requests, */order_added chan<- bool){
+func OrdersServer(add_order <-chan elevio.ButtonEvent, clear_floor <-chan int, order_added chan<- bool){
     //handle wishes from other modules to write to orders
-    /*for{
+    for{
         select{
-        case a:= <-add_order_request:
-            setOrder(order(some type))
+        case order:= <-add_order:
+            setOrder(order)
             order_added <- true
-        case a:= <- clearcurrfloororder_request:
-            clearOrderCurrentFloor(elevator)
+        case floor:= <- clear_floor:
+            clearOrdersAtFloor(floor)
+       // case a:= <- clearspecificorder
         }
-    }*/
+    }
 }
 
 //MUST BE PRIVATE METHOD - only used by orders_server
-func clearOrderCurrentFloor(e Elevator) {
-    //clear order
+func clearOrdersAtFloor(floor int) {
+    for int i = 0; i = N_BUTTONS; i++ {
+        orders[floor][i] = false
+    }
 }
 
 //MUST BE PRIVATE METHOD - only used by orders_server
-func setOrder(/*order(some type)*/){
-    //orders[x][x] = order
-
+func setOrder(order elevio.ButtonEvent){
+    orders[order.Floor][order.Button] = true
 }
 
-func isOrderAbove(floor int) bool {
-	//for floor = m to floor > current, floor --
-		//if orders.get_is_order(elevator,floor)
-			//return true
-	//return false
+func isOrder(floor int, button elevio.ButtonType) bool {
+    return orders[floor][button]
 }
 
-func isOrderBelow(floor int) bool {
-	//for floor = 0  to floor < current, floor ++
-		//if orders.get_is_order(elevator,floor)
-			//return true
-	//return false
+func isOrderAbove(current_floor int) bool {
+	for floor = N_FLOORS; floor > current_floor; floor-- {
+        for button = elevio.BT_HallUp; button < N_BUTTONS; button++ {
+            if isOrder(floor, button) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+func isOrderBelow(current_floor int) bool {
+	for floor = 0; floor < current_floor; floor++ {
+        for button = elevio.BT_HallUp; button < N_BUTTONS; button++ {
+            if isOrder(floor, button) {
+                return true
+            }
+        }
+    }
+    return false
 }
 
 
-func ShouldStop() bool{
-	/*
-	switch(e.dirn){
-    case D_Down:
+func ShouldStop(current_floor int, direction elevio.MotorDirection) bool{
+	switch(direction){
+    case MD_Down:
         return
-            e.requests[e.floor][B_HallDown] ||
-            e.requests[e.floor][B_Cab]      ||
-            !requests_below(e);
-    case D_Up:
+            isOrder(current_floor)(BT_HallDown) ||
+            isOrder(current_floor)(BT_Cab)      ||
+            !isOrderBelow(current_floor);
+    case MD_Up:
         return
-            e.requests[e.floor][B_HallUp]   ||
-            e.requests[e.floor][B_Cab]      ||
-            !requests_above(e);
-    case D_Stop:
+            isOrder(current_floor)(BT_HallUp)   ||
+            isOrder(current_floor)(BT_Cab)      ||
+            !isOrderAbove(current_floor);
+    case MD_Stop:
     default:
         return 1;
     }
-	
-	
-	*/
 }
 
 
-func ChooseDirection() /*direction*/{
-	/* translate to go:
-	//men husk på å fikse sånn at heisen ikke kan kjøres fast
+func ChooseDirection(current_floor int, direction elevio.MotorDirection) elevio.MotorDirection {
+	// husk på å teste at heisen ikke kan kjøres fast hvis noen vil være kjipe
 
-	switch(e.dirn){
+	switch(direction){
+        //must use if else, go does not support " ? : "
+        /*
     case D_Up:
-        return  is_order_above(e) ? D_Up    :
-                is_order_below(e) ? D_Down  :
-                                    D_Stop  ;
+        return  isOrderAbove(current_floor) ? MD_Up    :
+                isOrderBelow(current_floor) ? MD_Down  :
+                                    MD_Stop  ;
     case D_Down:
     case D_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
-        return  is_order_below(e) ? D_Down  :
-                is_order_above(e) ? D_Up    :
-                                    D_Stop  ;
+        return  isOrderBelow(current_floor) ? MD_Down  :
+                isOrderAbove(current_floor) ? MD_Up    :
+                                    MD_Stop  ;
     default:
-        return D_Stop;
-    }*/
+        return MD_Stop;*/
+    }
 }
