@@ -1,5 +1,6 @@
 package orders
-import "./elevio"
+import "../elevio"
+import "../globalconstants"
 /*orders should not have direct access to elevatorstates, I think?
 should rather be passed only as args floor and direction from fsm
 
@@ -8,7 +9,7 @@ dir takes elevator as argument from fsm.
 */
 
 //trengs det noe init orders??:
-var orders[N_FLOORS][N_BUTTONS] bool = {false}
+var orders = [globalconstants.N_FLOORS][globalconstants.N_BUTTONS]bool{{false}}
 
 func OrdersServer(add_order <-chan elevio.ButtonEvent, clear_floor <-chan int, order_added chan<- bool){
     //handle wishes from other modules to write to orders
@@ -26,7 +27,7 @@ func OrdersServer(add_order <-chan elevio.ButtonEvent, clear_floor <-chan int, o
 
 //MUST BE PRIVATE METHOD - only used by orders_server
 func clearOrdersAtFloor(floor int) {
-    for int i = 0; i = N_BUTTONS; i++ {
+    for i := 0; i < globalconstants.N_BUTTONS; i++ {
         orders[floor][i] = false
     }
 }
@@ -41,9 +42,9 @@ func isOrder(floor int, button elevio.ButtonType) bool {
 }
 
 func isOrderAbove(current_floor int) bool {
-	for floor = N_FLOORS; floor > current_floor; floor-- {
-        for button = elevio.BT_HallUp; button < N_BUTTONS; button++ {
-            if isOrder(floor, button) {
+	for floor := globalconstants.N_FLOORS; floor > current_floor; floor-- {
+        for button := 0; button < globalconstants.N_BUTTONS; button++ {
+            if isOrder(floor, elevio.ButtonType(button)) {
                 return true
             }
         }
@@ -52,9 +53,9 @@ func isOrderAbove(current_floor int) bool {
 }
 
 func isOrderBelow(current_floor int) bool {
-	for floor = 0; floor < current_floor; floor++ {
-        for button = elevio.BT_HallUp; button < N_BUTTONS; button++ {
-            if isOrder(floor, button) {
+	for floor := 0; floor < current_floor; floor++ {
+        for button := 0; button < globalconstants.N_BUTTONS; button++ {
+            if isOrder(floor, elevio.ButtonType(button)) {
                 return true
             }
         }
@@ -65,20 +66,19 @@ func isOrderBelow(current_floor int) bool {
 
 func ShouldStop(current_floor int, direction elevio.MotorDirection) bool{
 	switch(direction){
-    case MD_Down:
-        return
-            isOrder(current_floor)(BT_HallDown) ||
-            isOrder(current_floor)(BT_Cab)      ||
-            !isOrderBelow(current_floor);
-    case MD_Up:
-        return
-            isOrder(current_floor)(BT_HallUp)   ||
-            isOrder(current_floor)(BT_Cab)      ||
-            !isOrderAbove(current_floor);
-    case MD_Stop:
+    case elevio.MD_Down:
+        return (isOrder(current_floor, elevio.BT_HallDown) ||
+            isOrder(current_floor, elevio.BT_Cab)      ||
+            !isOrderBelow(current_floor))
+    case elevio.MD_Up:
+        return (isOrder(current_floor, elevio.BT_HallUp)   ||
+            isOrder(current_floor, elevio.BT_Cab)      ||
+            !isOrderAbove(current_floor))
+    case elevio.MD_Stop:
     default:
-        return 1;
+        break
     }
+    return true
 }
 
 
@@ -89,15 +89,16 @@ func ChooseDirection(current_floor int, direction elevio.MotorDirection) elevio.
         //must use if else, go does not support " ? : "
         /*
     case D_Up:
-        return  isOrderAbove(current_floor) ? MD_Up    :
-                isOrderBelow(current_floor) ? MD_Down  :
-                                    MD_Stop  ;
+        return  isOrderAbove(current_floor) ? elevio.MD_Up    :
+                isOrderBelow(current_floor) ? elevio.MD_Down  :
+                                    elevio.MD_Stop  ;
     case D_Down:
     case D_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
-        return  isOrderBelow(current_floor) ? MD_Down  :
-                isOrderAbove(current_floor) ? MD_Up    :
-                                    MD_Stop  ;
+        return  isOrderBelow(current_floor) ? elevio.MD_Down  :
+                isOrderAbove(current_floor) ? elevio.MD_Up    :
+                                    elevio.MD_Stop  ;
     default:
-        return MD_Stop;*/
+        return elevio.MD_Stop;*/
     }
+    return elevio.MD_Down //temporary for build
 }

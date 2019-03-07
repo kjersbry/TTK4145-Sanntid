@@ -2,10 +2,14 @@ package main
 
 import "./elevio"
 import "./globalconstants"
+import "./elevatorstates"
+import "./fsm"
+import "./orderassigner"
+import "./orders"
 
 func main(){
 	//initialization
-	elevio.Init("localhost:15657", N_FLOORS)
+	elevio.Init("localhost:15657", globalconstants.N_FLOORS)
 	//order.Init(numFloors, numElevators)
 	drv_buttons := make(chan elevio.ButtonEvent)
 	drv_floors  := make(chan int)

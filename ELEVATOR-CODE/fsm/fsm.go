@@ -1,6 +1,7 @@
 package fsm
-import "./orders"
-import "./elevatorstates"
+import "../orders"
+import "../elevatorstates"
+import "../elevio"
 
 //doors and lights
 
@@ -10,15 +11,15 @@ func FSM(drv_floors <-chan int, clear_floor chan<- int, order_added <-chan bool/
 	for{
 		select {
 		case floor:= <- drv_floors:
-			if (fsm.onFloorArrival(floor)){
+			if (onFloorArrival(floor)){
 				clear_floor <- floor
 			}
 
 		case <- order_added:
-			fsm.onListUpdate()
+			onListUpdate()
 
 		/*case <- door_timeout: //= closing doors
-			state = FSM.onDoorTimeout()
+			state = onDoorTimeout()
 			channel_for_updating_state <- state //forslag
 		*/
 		
@@ -27,29 +28,29 @@ func FSM(drv_floors <-chan int, clear_floor chan<- int, order_added <-chan bool/
 }
 
 
-func onFloorArrival(floor) bool {
-	elevator.floor = floor
-	if orders.Should_stop() {
+func onFloorArrival(floor int) bool {
+	//elevator.floor = floor //use channel
+	/*if orders.ShouldStop(floor, direction) { //needs direction from somewhere
 		elevio.SetMotorDirection(MD_Stop)
 		return true //does stop
-	}
+	}*/
 	return false //does not stop
 }
 
 func onDoorTimeout() {
-	elev := elevatorstates.Elevator()
+	elev := elevatorstates.ReadElevator()
 
-	switch(elev.state){
-	case ES_DoorOpen:
-		dir := orders.ChooseDirection(elev.floor, elev.direction)
+	switch(elev.State){
+	case elevatorstates.ES_DoorOpen:
+		dir := orders.ChooseDirection(elev.Floor, elev.Direction)
 		elevio.SetMotorDirection(dir)
 		//Sets state:
 		//NB: do through channels, can't do directly  like this.
-		/* elev.direction = dir
+		/* elev.Direction = dir
 		if(dir == MD_Stop){
-			elev.state = ES_Idle
+			elev.State = elevatorstates.ES_Idle
 			} else {
-			elev.state = EB_Moving
+			elev.State = EB_Moving
 		}*/
 		break;
 	default:
@@ -60,13 +61,13 @@ func onDoorTimeout() {
 }
 
 func onListUpdate() {
-	elev := elevatorstates.Elevator()
-	switch(elev.state){
-	case ES_Idle:
-		dir := orders.ChooseDirection(elev.floor, elev.direction)
+	elev := elevatorstates.ReadElevator()
+	switch(elev.State){
+	case elevatorstates.ES_Idle:
+		dir := orders.ChooseDirection(elev.Floor, elev.Direction)
 		elevio.SetMotorDirection(dir)
 		/*set through write channel:
-		elev.state = ES_Moving */
+		elev.State = elevatorstates.ES_Moving */
 		break;
 	default:
 		break;

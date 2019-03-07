@@ -1,24 +1,26 @@
 package elevatorstates
-import "./elevio"
-
-typedef enum {
-    ES_Idle,
-    ES_DoorOpen,
-    ES_Moving
-} ElevatorState;
+import "../elevio"
 
 
-typedef struct {
-    elevator_ID int;
-    state ElevatorState;
-    floor int;
-    direction MotorDirection;   //does only change to stop when IDLE, not when stopping for order
-} Elevator;
+type ElevatorState int
+const (
+    ES_Idle ElevatorState = 0
+    ES_DoorOpen           = 1
+    ES_Moving             = 2
+ )
 
-var elevator Elevator = {-1, ES_Idle, -1, MD_Stop} //NB midlertidig ID
+
+type Elevator struct {
+    Elevator_ID int
+    State ElevatorState
+    Floor int
+    Direction elevio.MotorDirection   //does only change to stop when IDLE, not when stopping for order
+}
+
+var elevator Elevator = Elevator{-1, ES_Idle, -1, elevio.MD_Stop} //NB midlertidig ID
 
 //Read function
-func Elevator() Elevator {
+func ReadElevator() Elevator {
     return elevator
 }
 
@@ -26,13 +28,13 @@ func InitElevator(drv_floors <-chan int){
     //somehow initialize ID uniquely
     select{
     case floor:= <- drv_floors:
-        elevator.floor = floor
+        elevator.Floor = floor
     }
-    if(elevator.floor == -1){
+    if(elevator.Floor == -1){
         //init between floors:
-        elevator.direction = MD_Down
-        SetMotorDirection(elevator.direction)
-        elevator.state = ES_Moving
+        elevator.Direction = elevio.MD_Down
+        elevio.SetMotorDirection(elevator.Direction)
+        elevator.State = ES_Moving
     }
 }
 
