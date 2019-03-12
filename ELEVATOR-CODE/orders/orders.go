@@ -87,18 +87,23 @@ func ChooseDirection(current_floor int, direction elevio.MotorDirection) elevio.
 
 	switch(direction){
         //must use if else, go does not support " ? : "
-        /*
+        
     case D_Up:
-        return  isOrderAbove(current_floor) ? elevio.MD_Up    :
-                isOrderBelow(current_floor) ? elevio.MD_Down  :
-                                    elevio.MD_Stop  ;
+        if isOrderAbove(current_floor) {
+            return elevio.MD_Up
+        }
+        else if isOrderBelow(current_floor){
+        return elevio.MD_Down
+        }
+        return elevio.MD_Stop
+
     case D_Down:
     case D_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
         return  isOrderBelow(current_floor) ? elevio.MD_Down  :
                 isOrderAbove(current_floor) ? elevio.MD_Up    :
                                     elevio.MD_Stop  ;
     default:
-        return elevio.MD_Stop;*/
+        return elevio.MD_Stop;
     }
     return elevio.MD_Down //temporary for build
 }
