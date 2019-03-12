@@ -11,7 +11,7 @@ dir takes elevator as argument from fsm.
 //trengs det noe init orders??:
 var orders = [globalconstants.N_FLOORS][globalconstants.N_BUTTONS]bool{{false}}
 
-func OrdersServer(add_order <-chan elevio.ButtonEvent, clear_floor <-chan int, order_added chan<- bool){
+func UpdateOrders(add_order <-chan elevio.ButtonEvent, clear_floor <-chan int, order_added chan<- bool){
     //handle wishes from other modules to write to orders
     for{
         select{
@@ -20,7 +20,7 @@ func OrdersServer(add_order <-chan elevio.ButtonEvent, clear_floor <-chan int, o
             order_added <- true
         case floor:= <- clear_floor:
             clearOrdersAtFloor(floor)
-       // case a:= <- clearspecificorder
+       // case a:= <- clearspecificorder //eventuelt
         }
     }
 }
@@ -37,14 +37,14 @@ func setOrder(order elevio.ButtonEvent){
     orders[order.Floor][order.Button] = true
 }
 
-func isOrder(floor int, button elevio.ButtonType) bool {
+func IsOrder(floor int, button elevio.ButtonType) bool {
     return orders[floor][button]
 }
 
 func isOrderAbove(current_floor int) bool {
 	for floor := globalconstants.N_FLOORS; floor > current_floor; floor-- {
         for button := 0; button < globalconstants.N_BUTTONS; button++ {
-            if isOrder(floor, elevio.ButtonType(button)) {
+            if IsOrder(floor, elevio.ButtonType(button)) {
                 return true
             }
         }
@@ -55,7 +55,7 @@ func isOrderAbove(current_floor int) bool {
 func isOrderBelow(current_floor int) bool {
 	for floor := 0; floor < current_floor; floor++ {
         for button := 0; button < globalconstants.N_BUTTONS; button++ {
-            if isOrder(floor, elevio.ButtonType(button)) {
+            if IsOrder(floor, elevio.ButtonType(button)) {
                 return true
             }
         }
@@ -67,12 +67,12 @@ func isOrderBelow(current_floor int) bool {
 func ShouldStop(current_floor int, direction elevio.MotorDirection) bool{
 	switch(direction){
     case elevio.MD_Down:
-        return (isOrder(current_floor, elevio.BT_HallDown) ||
-            isOrder(current_floor, elevio.BT_Cab)      ||
+        return (IsOrder(current_floor, elevio.BT_HallDown) ||
+            IsOrder(current_floor, elevio.BT_Cab)      ||
             !isOrderBelow(current_floor))
     case elevio.MD_Up:
-        return (isOrder(current_floor, elevio.BT_HallUp)   ||
-            isOrder(current_floor, elevio.BT_Cab)      ||
+        return (IsOrder(current_floor, elevio.BT_HallUp)   ||
+            IsOrder(current_floor, elevio.BT_Cab)      ||
             !isOrderAbove(current_floor))
     case elevio.MD_Stop:
     default:
