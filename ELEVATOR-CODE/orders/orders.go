@@ -5,7 +5,7 @@ import "../globalconstants"
 should rather be passed only as args floor and direction from fsm
 
 But, it may be prettier that the funcs that need floor and
-dir takes elevator as argument from fsm. 
+dir takes elevator as argument from fsm.
 */
 
 //trengs det noe init orders??:
@@ -87,23 +87,23 @@ func ChooseDirection(current_floor int, direction elevio.MotorDirection) elevio.
 
 	switch(direction){
         //must use if else, go does not support " ? : "
-        
-    case D_Up:
+
+    case elevio.MD_Up:
         if isOrderAbove(current_floor) {
             return elevio.MD_Up
-        }
-        else if isOrderBelow(current_floor){
-        return elevio.MD_Down
+        } else if isOrderBelow(current_floor){
+            return elevio.MD_Down
         }
         return elevio.MD_Stop
 
-    case D_Down:
-    case D_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
-        return  isOrderBelow(current_floor) ? elevio.MD_Down  :
-                isOrderAbove(current_floor) ? elevio.MD_Up    :
-                                    elevio.MD_Stop  ;
-    default:
-        return elevio.MD_Stop;
+    case elevio.MD_Down:
+    case elevio.MD_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
+
+        if  isOrderBelow(current_floor) {
+            return elevio.MD_Down
+        } else if isOrderAbove(current_floor) {
+            return elevio.MD_Up
+        }
     }
-    return elevio.MD_Down //temporary for build
+    return elevio.MD_Stop
 }
