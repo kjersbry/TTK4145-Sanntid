@@ -7,6 +7,7 @@ import (
  	"./fsm"
  	"./orderassigner"
 	 "./orders"
+	 "./lamps"
 )
 
 func main(){
@@ -35,6 +36,7 @@ func main(){
 	go fsm.FSM(drv_floors, clear_floor, order_added, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
 	go orderassigner.AssignOrder(drv_buttons, add_order)
 	//go timer.timer(start, door_timeout)
+	go lamps.SetLamps()
 
 	//Servers
 	go orders.UpdateOrders(add_order, clear_floor, order_added)
