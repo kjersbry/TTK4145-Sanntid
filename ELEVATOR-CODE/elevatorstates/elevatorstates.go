@@ -24,8 +24,20 @@ func ReadElevator() Elevator {
     return elevator
 }
 
-func ElevatorStateServer(/*chans.....*/){
-
+func UpdateElevator(update_ID <-chan int, update_state <-chan ElevatorState,
+    update_floor <-chan int, update_direction <-chan elevio.MotorDirection){
+        for {
+            select{
+            case new_id:= <- update_ID:
+                elevator.Elevator_ID=new_id
+            case new_state:= <- update_state:
+                elevator.State= new_state
+            case new_floor:= <- update_floor:
+                elevator.Floor=new_floor
+            case new_dir:= <- update_direction:
+                elevator.Direction = new_dir
+            }
+        }
 }
 
 
