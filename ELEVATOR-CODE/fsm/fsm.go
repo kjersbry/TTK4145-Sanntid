@@ -4,7 +4,6 @@ import "../elevatorstates"
 import "../elevio"
 
 //doors and lights
-
 //const door_open_duration_s int = 3
 
 func FSM(drv_floors <-chan int, clear_floor chan<- int, order_added <-chan bool/*, ...chans*/){
@@ -20,7 +19,7 @@ func FSM(drv_floors <-chan int, clear_floor chan<- int, order_added <-chan bool/
 
 		/*case <- door_timeout: //= closing doors
 			state = onDoorTimeout()
-			channel_for_updating_state <- state //forslag
+			channel_for_updating_state <- state //forslag, bruke stateserver
 		*/
 		
 		}
@@ -29,11 +28,12 @@ func FSM(drv_floors <-chan int, clear_floor chan<- int, order_added <-chan bool/
 
 
 func onFloorArrival(floor int) bool {
-	//elevator.floor = floor //use channel
-	/*if orders.ShouldStop(floor, direction) { //needs direction from somewhere
+	//elevator.floor = floor //use channel, stateserver
+	if orders.ShouldStop(floor, elevatorstates.ReadElevator().direction) {
 		elevio.SetMotorDirection(MD_Stop)
+		//and start door timer!
 		return true //does stop
-	}*/
+	}
 	return false //does not stop
 }
 
@@ -45,7 +45,7 @@ func onDoorTimeout() {
 		dir := orders.ChooseDirection(elev.Floor, elev.Direction)
 		elevio.SetMotorDirection(dir)
 		//Sets state:
-		//NB: do through channels, can't do directly  like this.
+		//NB: do through stateserver
 		/* elev.Direction = dir
 		if(dir == MD_Stop){
 			elev.State = elevatorstates.ES_Idle
@@ -66,7 +66,7 @@ func onListUpdate() {
 	case elevatorstates.ES_Idle:
 		dir := orders.ChooseDirection(elev.Floor, elev.Direction)
 		elevio.SetMotorDirection(dir)
-		/*set through write channel:
+		/*set through write channel: stateserver
 		elev.State = elevatorstates.ES_Moving */
 		break;
 	default:

@@ -24,6 +24,11 @@ func ReadElevator() Elevator {
     return elevator
 }
 
+func ElevatorStateServer(/*chans.....*/){
+
+}
+
+
 func InitElevator(drv_floors <-chan int){
     //somehow initialize ID uniquely
     select{
