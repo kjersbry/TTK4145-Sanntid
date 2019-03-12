@@ -1,15 +1,20 @@
 package timer
 
+import "time"
 
-/* ish forslag:
-func DoorTimer(start chan<- bool, door_timeout <-chan bool){
+//ish forslag:
+func DoorTimer(start <-chan bool, door_timeout chan<- bool){
+	flag := false
+	timestamp:= time.Now()
 	for{
 		select{
 		case <- start:
-			start timer
-			while sometimerof3sec() not ended do nothing
-			stopped <- true
+			timestamp = time.Now()
+			flag = true
+		}
+		if (time.Now().Sub(timestamp) > time.Second*3) && flag {
+			door_timeout <- true
+			flag = false
 		}
 	}
 }
-*/

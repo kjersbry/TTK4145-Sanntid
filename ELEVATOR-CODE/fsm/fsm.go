@@ -1,31 +1,31 @@
 package fsm
-import "../orders"
-import "../elevatorstates"
-import "../elevio"
-
+import (
+	"../orders"
+	 "../elevatorstates"
+	"../elevio"
+)
 //doors and lights
 //const door_open_duration_s int = 3
 
-func FSM(drv_floors <-chan int, clear_floor chan<- int, order_added <-chan bool, door_timeout <-chan bool, 
+func FSM(drv_floors <-chan int, clear_floor chan<- int, order_added <-chan bool, start_door_timer chan<- bool, door_timeout <-chan bool, 
 	update_state chan<- elevatorstates.ElevatorState, update_floor chan<- int, update_direction chan<- elevio.MotorDirection /*, ...chans*/){
 	for{
 		select {
 		case floor:= <- drv_floors:
 			update_floor <- floor //kan flyttes til elevio! Dette er update på last floor.
-			if (onFloorArrival(floor)){
+			if (onFloorArrival(floor)){ //stops on order
 				clear_floor <- floor
+				start_door_timer <- true 
 			}
 
 		case <- order_added:
 			state:= onListUpdate()
 			update_state <- state
 
-		case is_timeout:=<- door_timeout: //=> doors should be closed
-			if(is_timeout){
+		case <- door_timeout: //=> doors should be closed
 				state, dir := onDoorTimeout()
 				update_state <- state
-				update_direction <- dir
-			}		
+				update_direction <- dir	
 		}
 	}
 }
@@ -35,7 +35,6 @@ func onFloorArrival(floor int) bool  {
 	if orders.ShouldStop(floor, elevatorstates.ReadElevator().Direction) {
 		elevio.SetMotorDirection(elevio.MD_Stop)
 		//SetFloorIndicator
-		//and start door timer!
 		return true //does stop
 	}
 	return false //does not stop

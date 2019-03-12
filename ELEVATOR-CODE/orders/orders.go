@@ -13,7 +13,7 @@ var orders = [globalconstants.N_FLOORS][globalconstants.N_BUTTONS]bool{{false}}
 
 func UpdateOrders(add_order <-chan elevio.ButtonEvent, clear_floor <-chan int, order_added chan<- bool){
     //handle wishes from other modules to write to orders
-    for{
+    for {
         select{
         case order:= <-add_order:
             setOrder(order)

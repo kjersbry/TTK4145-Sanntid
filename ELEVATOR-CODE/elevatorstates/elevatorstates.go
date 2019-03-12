@@ -15,6 +15,7 @@ type Elevator struct {
     State ElevatorState
     Floor int
     Direction elevio.MotorDirection   //does only change to stop when IDLE, not when stopping for order
+   // orderlist-ENKELTHEIS Orderstype
 }
 
 var elevator Elevator = Elevator{-1, ES_Idle, -1, elevio.MD_Stop} //NB midlertidig ID

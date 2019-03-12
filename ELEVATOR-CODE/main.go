@@ -8,6 +8,7 @@ import (
  	"./orderassigner"
 	 "./orders"
 	 "./lamps"
+	 "./timer"
 )
 
 func main(){
@@ -19,6 +20,7 @@ func main(){
 	order_added := make(chan bool) //for informing FSM about order update when idle
 	add_order   := make(chan elevio.ButtonEvent) //send orders from assigner to orders
 	door_timeout:= make(chan bool)
+	start_door_timer:= make(chan bool)
 
 	//Server channels
 	clear_floor := make(chan int) //FSM tells order to clear order
@@ -33,9 +35,9 @@ func main(){
 	
 	//run
 	go elevio.PollButtons(drv_buttons)
-	go fsm.FSM(drv_floors, clear_floor, order_added, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
+	go fsm.FSM(drv_floors, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
 	go orderassigner.AssignOrder(drv_buttons, add_order)
-	//go timer.timer(start, door_timeout)
+	go timer.DoorTimer(start_door_timer, door_timeout)
 	go lamps.SetLamps()
 
 	//Servers
