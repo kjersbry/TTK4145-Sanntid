@@ -29,8 +29,8 @@ func FSM(drv_floors <-chan int, clear_floor chan<- int, order_added <-chan bool/
 
 func onFloorArrival(floor int) bool {
 	//elevator.floor = floor //use channel, stateserver
-	if orders.ShouldStop(floor, elevatorstates.ReadElevator().direction) {
-		elevio.SetMotorDirection(MD_Stop)
+	if orders.ShouldStop(floor, elevatorstates.ReadElevator().Direction) {
+		elevio.SetMotorDirection(elevio.MD_Stop)
 		//and start door timer!
 		return true //does stop
 	}
