@@ -8,6 +8,11 @@ But, it may be prettier that the funcs that need floor and
 dir takes elevator as argument from fsm.
 */
 
+type AssignedOrder struct {			//Used by orderassigner.AssignOrder --> Untested
+	Order elevator_io.ButtonEvent
+	Elevator_ID int
+}
+
 //trengs det noe init orders??:
 var orders = [globalconstants.N_FLOORS][globalconstants.N_BUTTONS]bool{{false}}
 
