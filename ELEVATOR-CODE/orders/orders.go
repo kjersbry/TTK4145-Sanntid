@@ -96,7 +96,7 @@ func ChooseDirection(current_floor int, direction elevio.MotorDirection) elevio.
         }
         return elevio.MD_Stop
 
-    case elevio.MD_Down:
+    case elevio.MD_Down: //Any reason why this one is left empty? If intentional, add in a comment #codeQuality
     case elevio.MD_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
 
         if  isOrderBelow(current_floor) {
