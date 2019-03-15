@@ -3,6 +3,8 @@ import (
 	"../orders"
 	 "../states"
 	"../elevio"
+	"../globalconstants"
+	"fmt"
 )
 //doors and lights
 
@@ -10,34 +12,45 @@ var elevator states.Elevator
 
 func InitElevator(drv_floors <-chan int){
 	//somehow initialize ID uniquely
-	//init rest of elev stuff!!
-    select{
-    case floor:= <- drv_floors:
-        elevator.Floor = floor
-    }
-    if(elevator.Floor == -1){
-        //init between floors:
-        elevator.Direction = elevio.MD_Down
-        elevio.SetMotorDirection(elevator.Direction)
-        elevator.State = states.ES_Moving
-    }
+	//init rest of elev stuff
+	elevator.Elevator_ID = -1
+	elevator.State = states.ES_Idle
+	elevator.Floor = -1
+	elevator.Direction = elevio.MD_Stop
+	var ord [globalconstants.N_FLOORS][globalconstants.N_BUTTONS](states.Order)
+	elevator.Orders = ord
+
+  select{
+  case floor:= <- drv_floors:
+      elevator.Floor = floor
+			fmt.Printf("\nhei\n")
+	default:
+			if(elevator.Floor == -1){
+		      //init between floors:
+		      elevator.Direction = elevio.MD_Down
+		      elevio.SetMotorDirection(elevator.Direction)
+		      elevator.State = states.ES_Moving
+					fmt.Printf("\nhei2\n")
+    	}
+  }
 }
 
 func UpdateElevator(update_ID <-chan int, update_state <-chan states.ElevatorState,
-	update_floor <-chan int, update_direction <-chan elevio.MotorDirection, 
+	update_floor <-chan int, update_direction <-chan elevio.MotorDirection,
 	/*Orders: */
 	add_order <-chan elevio.ButtonEvent, clear_floor <-chan int, order_added chan<- bool){
-        for {
-            select{
-            case new_id:= <- update_ID:
-                elevator.Elevator_ID = new_id
-            case new_state:= <- update_state:
-                elevator.State = new_state
-            case new_floor:= <- update_floor:
-                elevator.Floor = new_floor
-            case new_dir:= <- update_direction:
+
+		for {
+    	select{
+      case new_id:= <- update_ID:
+        elevator.Elevator_ID = new_id
+      case new_state:= <- update_state:
+        elevator.State = new_state
+      case new_floor:= <- update_floor:
+        elevator.Floor = new_floor
+      case new_dir:= <- update_direction:
 				elevator.Direction = new_dir
-				
+
 			case order:= <-add_order:
 				orders.SetOrder(elevator, order)
 				order_added <- true
@@ -54,19 +67,18 @@ func ReadElevator() states.Elevator {
 
 
 /*------------------------------ funcs for running FSM -----------------------------------------------------------------------------------*/
-//FSM trenger kun å oppdatere elevator via channels dersom det er fare for at den oppdateres fra et annet sted samtidig.
+//FSM trenger kun å oppdatere elevator via channels dersom det er fare for at den oppdateres fra et annet sted samtidig
 //kun ved init etter krasj tror jeg?
-//men mye kan oppdateres direkte til updateelev istedet for via fsm funk
-func FSM(drv_floors <-chan int/*, clear_floor chan<- int*/, order_added <-chan bool, start_door_timer chan<- bool, door_timeout <-chan bool, 
+func FSM(drv_floors <-chan int, clear_floor chan<- int, order_added <-chan bool, start_door_timer chan<- bool, door_timeout <-chan bool,
 	update_state chan<- states.ElevatorState, update_floor chan<- int, update_direction chan<- elevio.MotorDirection /*, ...chans*/){
 	for{
 		select {
 		case floor:= <- drv_floors:
 			update_floor <- floor //kan flyttes til elevio! Dette er update på last floor.
+			fmt.Printf("\nnew floor: %d\n", floor)
 			if (onFloorArrival(floor)){ //stops on order
-				//clear_floor <- floor //old
-				orders.ClearAtCurrentFloor(elevator)
-				start_door_timer <- true 
+				clear_floor <- floor
+				start_door_timer <- true
 			}
 
 		case <- order_added:
@@ -76,7 +88,7 @@ func FSM(drv_floors <-chan int/*, clear_floor chan<- int*/, order_added <-chan b
 		case <- door_timeout: //=> doors should be closed
 				state, dir := onDoorTimeout()
 				update_state <- state
-				update_direction <- dir	
+				update_direction <- dir
 		}
 	}
 }
@@ -111,7 +123,7 @@ func onDoorTimeout() (states.ElevatorState, elevio.MotorDirection) {
 	}
 
 	return state, dir
-	
+
 }
 
 func onListUpdate() states.ElevatorState {
@@ -120,11 +132,10 @@ func onListUpdate() states.ElevatorState {
 	case states.ES_Idle:
 		dir := orders.ChooseDirection(elevator)
 		elevio.SetMotorDirection(dir)
-		state = states.ES_Moving 
+		state = states.ES_Moving
 		break;
 	default:
 		break;
 	}
 	return state
 }
-

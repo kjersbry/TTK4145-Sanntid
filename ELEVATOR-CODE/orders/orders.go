@@ -3,20 +3,39 @@ import (
     "../elevio"
     "../globalconstants"
     "../states"
+    "fmt"
 )
 
 func ClearAtCurrentFloor(e states.Elevator) {
+    if(e.Floor < 0 || e.Floor > 3){
+      fmt.Printf("\nclear: out of range %d \n", e.Floor)
+      return
+    } //todo: kanskje endre, litt for quickfix
+
+
     for i := 0; i < globalconstants.N_BUTTONS; i++ {
         e.Orders[e.Floor][i].State = states.OS_NoOrder
     }
 }
 
 func SetOrder(e states.Elevator, order elevio.ButtonEvent){
+  if(e.Floor < 0 || e.Floor > 3){
+    fmt.Printf("\nSet: out of range %d \n", e.Floor)
+    return
+  } //todo: kanskje endre, litt for quickfix
+
+
     e.Orders[order.Floor][order.Button].State = states.OS_UnacceptedOrder
 }
 
 func IsOrder(e states.Elevator, floor int, button elevio.ButtonType) bool {
     //todo: vurder denne. Når skal den si at det er bestilling (= når skal den stoppe), skal den stoppe på unaccepted også?
+    if(e.Floor < 0 || e.Floor > 3){
+      //fmt.Printf("\nIs: out of range %d \n", e.Floor)
+      return false
+    } //todo: kanskje endre, litt for quickfix
+
+
     return (e.Orders[floor][button].State != states.OS_NoOrder)
 }
 

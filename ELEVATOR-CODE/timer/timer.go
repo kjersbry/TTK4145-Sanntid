@@ -11,10 +11,11 @@ func DoorTimer(start <-chan bool, door_timeout chan<- bool){
 		case <- start:
 			timestamp = time.Now()
 			flag = true
-		}
-		if (time.Now().Sub(timestamp) > time.Second*3) && flag {
-			door_timeout <- true
-			flag = false
+		default:
+			if (time.Now().Sub(timestamp) > time.Second*3) && flag {
+				door_timeout <- true
+				flag = false
+			}
 		}
 	}
 }

@@ -8,6 +8,7 @@ import (
  	"./orderassigner"
 	 "./lamps"
 	 "./timer"
+	 "time"
 )
 
 func main(){
@@ -29,19 +30,21 @@ func main(){
 	update_direction := make(chan elevio.MotorDirection)
 
 	go elevio.PollFloorSensor(drv_floors)
-	//go elevatorstates.PollAndSetDirection() //bare forslag, tror vi dropper
 	fsm.InitElevator(drv_floors)
-	
+
 	//run
 	go elevio.PollButtons(drv_buttons)
-	go fsm.FSM(drv_floors/*, clear_floor*/, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
+		go fsm.UpdateElevator(update_ID, update_state, update_floor, update_direction, add_order, clear_floor, order_added)
+	go fsm.FSM(drv_floors, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
 	go orderassigner.AssignOrder(drv_buttons, add_order)
 	go timer.DoorTimer(start_door_timer, door_timeout)
 	go lamps.SetLamps()
 
 	//Servers
 	//go orders.UpdateOrders(add_order, clear_floor, order_added)
-	go fsm.UpdateElevator(update_ID, update_state, update_floor, update_direction, add_order, clear_floor, order_added)
-	
-	
+
+
+	for{
+		time.Sleep(time.Second*100)
+	}
 }
