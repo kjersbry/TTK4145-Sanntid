@@ -3,10 +3,9 @@ package main
 import (
 	"./elevio"
  	"./globalconstants"
- 	"./elevatorstates"
+ 	"./states"
  	"./fsm"
  	"./orderassigner"
-	 "./orders"
 	 "./lamps"
 	 "./timer"
 )
@@ -25,24 +24,24 @@ func main(){
 	//Server channels
 	clear_floor := make(chan int) //FSM tells order to clear order
 	update_ID := make(chan int) //todo: kan hende vi bare bør droppe denne, vente og se
-	update_state := make(chan elevatorstates.ElevatorState)
+	update_state := make(chan states.ElevatorState)
 	update_floor := make(chan int)
 	update_direction := make(chan elevio.MotorDirection)
 
 	go elevio.PollFloorSensor(drv_floors)
 	//go elevatorstates.PollAndSetDirection() //bare forslag, tror vi dropper
-	elevatorstates.InitElevator(drv_floors)
+	fsm.InitElevator(drv_floors)
 	
 	//run
 	go elevio.PollButtons(drv_buttons)
-	go fsm.FSM(drv_floors, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
+	go fsm.FSM(drv_floors/*, clear_floor*/, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
 	go orderassigner.AssignOrder(drv_buttons, add_order)
 	go timer.DoorTimer(start_door_timer, door_timeout)
 	go lamps.SetLamps()
 
 	//Servers
-	go orders.UpdateOrders(add_order, clear_floor, order_added)
-	go elevatorstates.UpdateElevator(update_ID, update_state, update_floor, update_direction)
+	//go orders.UpdateOrders(add_order, clear_floor, order_added)
+	go fsm.UpdateElevator(update_ID, update_state, update_floor, update_direction, add_order, clear_floor, order_added)
 	
 	
 }
