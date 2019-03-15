@@ -6,7 +6,7 @@ import (
  	"./states"
  	"./fsm"
  	"./orderassigner"
-	 "./lamps"
+	 //"./lamps"
 	 "./timer"
 	 "time"
 )
@@ -34,11 +34,11 @@ func main(){
 
 	//run
 	go elevio.PollButtons(drv_buttons)
-		go fsm.UpdateElevator(update_ID, update_state, update_floor, update_direction, add_order, clear_floor, order_added)
+	go fsm.UpdateElevator(update_ID, update_state, update_floor, update_direction, add_order, clear_floor, order_added)
 	go fsm.FSM(drv_floors, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
 	go orderassigner.AssignOrder(drv_buttons, add_order)
 	go timer.DoorTimer(start_door_timer, door_timeout)
-	go lamps.SetLamps()
+	//go lamps.SetLamps()
 
 	//Servers
 	//go orders.UpdateOrders(add_order, clear_floor, order_added)

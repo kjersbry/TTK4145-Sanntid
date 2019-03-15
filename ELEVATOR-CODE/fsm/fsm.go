@@ -7,6 +7,19 @@ import (
 	"fmt"
 )
 //doors and lights
+/*
+PREVIOUS PROBLEM:
+bestillinger ble ikke lagt til i køen og heller ikke cleared
+Grunn: orders tar inn kopi av elevator, så det blir ikke endret direkte på den
+løsning: set og clear orders må returnere elevator!
+-
+NESTE PROBLEM:
+heisen kjører ikke når den har bestillinger
+Finner ut neste gang
+-
+*/
+
+
 
 var elevator states.Elevator
 
@@ -48,17 +61,19 @@ func UpdateElevator(update_ID <-chan int, update_state <-chan states.ElevatorSta
         elevator.State = new_state
       case new_floor:= <- update_floor:
         elevator.Floor = new_floor
+					fmt.Printf("\nelev floor is: %d\n", elevator.Floor)
       case new_dir:= <- update_direction:
 				elevator.Direction = new_dir
 
 			case order:= <-add_order:
-				orders.SetOrder(elevator, order)
+				elevator = orders.SetOrder(elevator, order)
 				order_added <- true
+				states.PrintOrders(elevator)
 			//case floor:= <- clear_floor:
 			case <- clear_floor:
-				orders.ClearAtCurrentFloor(elevator)
+				elevator = orders.ClearAtCurrentFloor(elevator)
 			}
-        }
+    }
 }
 
 func ReadElevator() states.Elevator {
@@ -76,6 +91,7 @@ func FSM(drv_floors <-chan int, clear_floor chan<- int, order_added <-chan bool,
 		case floor:= <- drv_floors:
 			update_floor <- floor //kan flyttes til elevio! Dette er update på last floor.
 			fmt.Printf("\nnew floor: %d\n", floor)
+
 			if (onFloorArrival(floor)){ //stops on order
 				clear_floor <- floor
 				start_door_timer <- true
