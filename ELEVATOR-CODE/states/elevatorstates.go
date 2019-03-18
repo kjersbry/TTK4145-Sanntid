@@ -3,6 +3,7 @@ import (
     "../elevio"
     "../globalconstants"
     "fmt"
+    "strconv"
 )
 
 
@@ -54,5 +55,41 @@ func PrintOrders(e Elevator){
     }
     fmt.Printf("\n")
   }
+  fmt.Printf("\n----------------\n\n")
+}
+
+func elevToString(e Elevator) string {
+  result :="State: "
+  switch(e.State){
+  case ES_Idle:
+    result += "Idle\n"
+    break
+  case ES_DoorOpen:
+    result += "Door open\n"
+    break
+  case ES_Moving:
+    result += "Moving\n"
+    break
+  }
+  result += "Floor: "
+  result += strconv.Itoa(e.Floor)
+  result += "\nDirection: "
+  switch(e.Direction){
+  case elevio.MD_Up:
+    result += "up\n"
+    break
+  case elevio.MD_Down:
+    result += "down\n"
+    break
+  case elevio.MD_Stop:
+    result += "stop\n"
+  }
+
+  return result
+}
+
+func PrintStates(e Elevator){
+  fmt.Printf("\n\n-----States------\n")
+  fmt.Printf("%s", elevToString(e))
   fmt.Printf("\n----------------\n\n")
 }

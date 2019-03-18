@@ -58,12 +58,17 @@ func UpdateElevator(update_ID <-chan int, update_state <-chan states.ElevatorSta
       case new_id:= <- update_ID:
         elevator.Elevator_ID = new_id
       case new_state:= <- update_state:
-        elevator.State = new_state
+				elevator.State = new_state
+				
+				states.PrintStates(elevator)
+				
       case new_floor:= <- update_floor:
         elevator.Floor = new_floor
 					fmt.Printf("\nelev floor is: %d\n", elevator.Floor)
       case new_dir:= <- update_direction:
 				elevator.Direction = new_dir
+
+				states.PrintStates(elevator)
 
 			case order:= <-add_order:
 				elevator = orders.SetOrder(elevator, order)
@@ -95,6 +100,7 @@ func FSM(drv_floors <-chan int, clear_floor chan<- int, order_added <-chan bool,
 			if (onFloorArrival(floor)){ //stops on order
 				clear_floor <- floor
 				start_door_timer <- true
+				update_state <- states.ES_DoorOpen
 			}
 
 		case <- order_added:
@@ -114,6 +120,7 @@ func onFloorArrival(floor int) bool  {
 	//SetFloorIndicator(floor)
 	if orders.ShouldStop(elevator) {
 		elevio.SetMotorDirection(elevio.MD_Stop)
+		//set door indicator
 		return true //does stop
 	}
 	return false //does not stop
@@ -127,7 +134,7 @@ func onDoorTimeout() (states.ElevatorState, elevio.MotorDirection) {
 	case states.ES_DoorOpen:
 		dir = orders.ChooseDirection(elevator)
 		elevio.SetMotorDirection(dir)
-		//SetFloorIndicator to zero
+		//SetDoorIndicator to zero
 		if(dir == elevio.MD_Stop){
 			state = states.ES_Idle
 			} else {
