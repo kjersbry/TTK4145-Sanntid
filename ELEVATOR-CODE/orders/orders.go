@@ -6,27 +6,30 @@ import (
     "fmt"
 )
 
-func ClearAtCurrentFloor(e states.Elevator) states.Elevator {
+func ClearAtCurrentFloor(e states.Elevator) [globalconstants.N_FLOORS][globalconstants.N_BUTTONS]states.Order {
     if(e.Floor < 0 || e.Floor > 3){
       fmt.Printf("\nclear: out of range %d \n", e.Floor)
-      return e
-    } //todo: kanskje endre, litt for quickfix
+      return e.Orders
+    } //todo: ta vekk! litt for quickfix
 
     for i := 0; i < globalconstants.N_BUTTONS; i++ {
         e.Orders[e.Floor][i].State = states.OS_NoOrder
+        elevio.SetButtonLamp(elevio.ButtonType(i), e.Floor, false) //todo move when several elevs
     }
 
-    return e
+    return e.Orders
 }
 
-func SetOrder(e states.Elevator, order elevio.ButtonEvent) states.Elevator {
+func SetOrder(e states.Elevator, order elevio.ButtonEvent) [globalconstants.N_FLOORS][globalconstants.N_BUTTONS]states.Order {
   if(order.Floor < 0 || order.Button > 3){
     fmt.Printf("\nSet: out of range %d \n", e.Floor)
-    return e
-  } //todo: kanskje endre, litt for quickfix
+    return e.Orders
+  } //todo:ta vekk! litt for quickfix
 
     e.Orders[order.Floor][order.Button].State = states.OS_UnacceptedOrder
-    return e
+    elevio.SetButtonLamp(order.Button, order.Floor, true) //todo move when several elevs
+
+    return e.Orders
 }
 
 func IsOrder(e states.Elevator, floor int, button elevio.ButtonType) bool {
@@ -34,14 +37,14 @@ func IsOrder(e states.Elevator, floor int, button elevio.ButtonType) bool {
     if(floor < 0 || floor > 3){
       fmt.Printf("\nIs: out of range %d \n", floor)
       return false
-    } //todo: kanskje endre, litt for quickfix
+    } //todo: ta vekk! litt for quickfix
 
 
     return (e.Orders[floor][button].State != states.OS_NoOrder)
 }
 
 func isOrderAbove(e states.Elevator) bool {
-	for floor := globalconstants.N_FLOORS; floor > e.Floor; floor-- {
+	for floor := globalconstants.N_FLOORS - 1; floor > e.Floor; floor-- {
         for button := 0; button < globalconstants.N_BUTTONS; button++ {
             if IsOrder(e, floor, elevio.ButtonType(button)) {
                 return true
@@ -83,6 +86,9 @@ func ShouldStop(e states.Elevator) bool{
 
 func ChooseDirection(e states.Elevator) elevio.MotorDirection {
 	// husk på å teste at heisen ikke kan kjøres fast hvis noen vil være kjipe
+    /*if ShouldStop(e) {
+        return elevio.MD_Stop
+    }*/
 
 	switch(e.Direction){
     case elevio.MD_Up:

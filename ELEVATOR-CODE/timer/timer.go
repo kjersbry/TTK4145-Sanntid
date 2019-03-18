@@ -1,23 +1,24 @@
 package timer
 
 import "time"
-import "fmt"
+//import "fmt"
 
-//ish forslag:
 func DoorTimer(start <-chan bool, door_timeout chan<- bool){
-	flag := false
+	is_active := false
 	timestamp:= time.Now()
 	for{
 		select{
-		case <- start:
-			timestamp = time.Now()
-			flag = true
-			fmt.Printf("\n\nDOOR OPEN\n")
+		case should_start :=<- start:
+			if(should_start){
+				timestamp = time.Now()
+				is_active = true
+				//fmt.Printf("\n\nDOOR OPEN\n")
+			}
 		default:
-			if (time.Now().Sub(timestamp) > time.Second*3) && flag {
+			if (time.Now().Sub(timestamp) > time.Second*3) && is_active {
 				door_timeout <- true
-				flag = false
-				fmt.Printf("\n\ntimer DOOR CLOSE\n")
+				is_active = false
+				//fmt.Printf("\n\ntimer DOOR CLOSE\n")
 
 			}
 		}

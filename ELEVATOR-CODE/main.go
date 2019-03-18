@@ -17,10 +17,11 @@ func main(){
 	//order.Init(numFloors, numElevators)
 	drv_buttons := make(chan elevio.ButtonEvent)
 	drv_floors  := make(chan int)
-	order_added := make(chan bool) //for informing FSM about order update when idle
+	order_added := make(chan int) //for informing FSM about order update
 	add_order   := make(chan elevio.ButtonEvent) //send orders from assigner to orders
 	door_timeout:= make(chan bool)
 	start_door_timer:= make(chan bool)
+	floor_reached := make(chan bool)
 
 	//Server channels
 	clear_floor := make(chan int) //FSM tells order to clear order
@@ -34,8 +35,8 @@ func main(){
 
 	//run
 	go elevio.PollButtons(drv_buttons)
-	go fsm.UpdateElevator(update_ID, update_state, update_floor, update_direction, add_order, clear_floor, order_added)
-	go fsm.FSM(drv_floors, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
+	go fsm.UpdateElevator(update_ID, update_state, drv_floors, update_direction, floor_reached, add_order, clear_floor, order_added)
+	go fsm.FSM(floor_reached, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
 	go orderassigner.AssignOrder(drv_buttons, add_order)
 	go timer.DoorTimer(start_door_timer, door_timeout)
 	//go lamps.SetLamps()
