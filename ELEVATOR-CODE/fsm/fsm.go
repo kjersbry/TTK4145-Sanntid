@@ -4,23 +4,15 @@ import (
 	 "../states"
 	"../elevio"
 	"../globalconstants"
+	"../lamps"
 	"fmt"
 )
-//lights
 /*
-PROBLEMS:
-Stopper noen ganger når den ikke skal, andre ganger ikke når den skal
-Grunn: dir = stop
-
-Noen ganger venter den i 1 etg selv om den har bestilling i 0
-
-
-Når alt funker:
 Init between floors kjøres hver gang
 init: den åpner døra selv om den bare skulle kjøre ned til og idle etasjen
  sjekk hva de gjør. har de spes tilfelle for dører når det ikke er orders above or below
 
-Fiks det setalllampsgreiene
+initElev burde også bruke channels mot elevator
 */
 
 
@@ -28,8 +20,7 @@ Fiks det setalllampsgreiene
 var elevator states.Elevator
 
 func InitElevator(drv_floors <-chan int){
-	//somehow initialize ID uniquely
-	//init rest of elev stuff
+	//todo: somehow initialize ID uniquely
 	elevator.Elevator_ID = -1
 	elevator.State = states.ES_Idle
 	elevator.Floor = -1
@@ -79,9 +70,11 @@ func UpdateElevator(update_ID <-chan int, update_state <-chan states.ElevatorSta
 			case order:= <-add_order:
 				elevator.Orders = orders.SetOrder(elevator, order)
 				order_added <- order.Floor
-				//states.PrintOrders(elevator)
+				fmt.Printf("\nAdded order fl. %d\n", order.Floor)
+				lamps.SetAllLamps(elevator)
 			case <- clear_floor:
 				elevator.Orders = orders.ClearAtCurrentFloor(elevator)
+				lamps.SetAllLamps(elevator)
 			}
     }
 }
@@ -98,9 +91,7 @@ func FSM(floor_reached <-chan bool, clear_floor chan<- int, order_added <-chan i
 	update_state chan<- states.ElevatorState, update_floor chan<- int, update_direction chan<- elevio.MotorDirection /*, ...chans*/){
 	for{
 		select {
-		case <-floor_reached:
-			//update_floor <- floor //flyttet til elevio! Dette er update på last floor.
-			//fmt.Printf("\nnew floor: %d\n", floor)
+		case <- floor_reached:
 			if (onFloorArrival()){ //stops on order
 				clear_floor <- elevator.Floor
 				start_door_timer <- true
@@ -128,16 +119,23 @@ func FSM(floor_reached <-chan bool, clear_floor chan<- int, order_added <-chan i
 func onFloorArrival() bool  {
 	fmt.Printf("\nonFloorArrival\n")
 	elevio.SetFloorIndicator(elevator.Floor)
-	if orders.ShouldStop(elevator) {
-		elevio.SetMotorDirection(elevio.MD_Stop)
-		elevio.SetDoorOpenLamp(true)
-		return true //does stop
+
+	switch(elevator.State){
+	case states.ES_Moving:
+		if orders.ShouldStop(elevator) {
+			elevio.SetMotorDirection(elevio.MD_Stop)
+			elevio.SetDoorOpenLamp(true)
+			
+			return true //does stop
+		}
+		return false //does not stop
+	default:
 	}
-	return false //does not stop
+	return false
 }
 
 func onDoorTimeout() (states.ElevatorState, elevio.MotorDirection) {
-	fmt.Printf("\nonDoorTimeout\n")
+	fmt.Printf("\nonDoorTimeout start\n")
 
 	var dir elevio.MotorDirection
 	var state states.ElevatorState
@@ -147,18 +145,17 @@ func onDoorTimeout() (states.ElevatorState, elevio.MotorDirection) {
 		elevio.SetDoorOpenLamp(false)
 		dir = orders.ChooseDirection(elevator)
 		elevio.SetMotorDirection(dir)
+		fmt.Printf("dir: %s", states.DirToString(dir))
+
 		if(dir == elevio.MD_Stop){
+			fmt.Printf("\n chosen dir was stop")
 			state = states.ES_Idle
 			} else {
 			state = states.ES_Moving
 		}
-		break;
-	default:
-		break;
 	}
-
+	fmt.Printf("\nonDoorTimeout end\n")
 	return state, dir
-
 }
 
 func onListUpdate(floor int) (states.ElevatorState, elevio.MotorDirection, bool) {
@@ -174,24 +171,18 @@ func onListUpdate(floor int) (states.ElevatorState, elevio.MotorDirection, bool)
 		if(elevator.Floor == floor){
 			start_timer = true
 		}
-		break
 
 	case states.ES_Idle:
 		if(elevator.Floor == floor){
 			elevio.SetDoorOpenLamp(true)
 			start_timer = true
 			state = states.ES_DoorOpen
-		} else{
+		} else {
 			dir = orders.ChooseDirection(elevator)
 			elevio.SetMotorDirection(dir)
 			state = states.ES_Moving
 		}
-		break;
 	default:
-		break;
 	}
-	//setalllights //todo
-
-
 	return state, dir, start_timer
 }

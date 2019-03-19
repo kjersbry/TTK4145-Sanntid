@@ -58,32 +58,32 @@ func PrintOrders(e Elevator){
   fmt.Printf("\n----------------\n\n")
 }
 
+func DirToString(dir elevio.MotorDirection) string {
+  var result string
+  switch(dir){
+  case elevio.MD_Up:
+    result = "up"
+  case elevio.MD_Down:
+    result = "down"
+  case elevio.MD_Stop:
+    result = "stop"
+  }
+  return result
+}
+
 func elevToString(e Elevator) string {
   result :="State: "
   switch(e.State){
   case ES_Idle:
     result += "Idle\n"
-    break
   case ES_DoorOpen:
     result += "Door open\n"
-    break
   case ES_Moving:
     result += "Moving\n"
-    break
   }
   result += "Floor: "
   result += strconv.Itoa(e.Floor)
-  result += "\nDirection: "
-  switch(e.Direction){
-  case elevio.MD_Up:
-    result += "up\n"
-    break
-  case elevio.MD_Down:
-    result += "down\n"
-    break
-  case elevio.MD_Stop:
-    result += "stop\n"
-  }
+  result += "\nDirection: " + DirToString(e.Direction) + "\n"
 
   return result
 }
