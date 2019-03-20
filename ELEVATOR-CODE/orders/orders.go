@@ -1,55 +1,52 @@
 package orders
-import "../elevio"
-import "../globalconstants"
-/*orders should not have direct access to elevatorstates, I think?
-should rather be passed only as args floor and direction from fsm
+import (
+    "../elevio"
+    "../types"
+    "../constants"
+    "fmt"
+)
 
-But, it may be prettier that the funcs that need floor and
-dir takes elevator as argument from fsm.
-*/
+func ClearAtCurrentFloor(e types.Elevator) [constants.N_FLOORS][constants.N_BUTTONS]types.Order {
+    if(e.Floor < 0 || e.Floor > 3){
+      fmt.Printf("\nclear: out of range %d \n", e.Floor)
+      return e.Orders
+    } //todo: ta vekk! litt for quickfix
 
-type AssignedOrder struct {			//Used by orderassigner.AssignOrder --> Untested
-	Order elevator_io.ButtonEvent
-	Elevator_ID int
-}
-
-//trengs det noe init orders??:
-var orders = [globalconstants.N_FLOORS][globalconstants.N_BUTTONS]bool{{false}}
-
-func UpdateOrders(add_order <-chan elevio.ButtonEvent, clear_floor <-chan int, order_added chan<- bool){
-    //handle wishes from other modules to write to orders
-    for {
-        select{
-        case order:= <-add_order:
-            setOrder(order)
-            order_added <- true
-        case floor:= <- clear_floor:
-            clearOrdersAtFloor(floor)
-       // case a:= <- clearspecificorder //eventuelt
-        }
+    for i := 0; i < constants.N_BUTTONS; i++ {
+        e.Orders[e.Floor][i].State = types.OS_NoOrder
+        //elevio.SetButtonLamp(elevio.ButtonType(i), e.Floor, false) //todo move when several elevs
     }
+
+    return e.Orders
 }
 
-//MUST BE PRIVATE METHOD - only used by orders_server
-func clearOrdersAtFloor(floor int) {
-    for i := 0; i < globalconstants.N_BUTTONS; i++ {
-        orders[floor][i] = false
-    }
+func SetOrder(e types.Elevator, order elevio.ButtonEvent) [constants.N_FLOORS][constants.N_BUTTONS]types.Order {
+  if(order.Floor < 0 || order.Button > 3){
+    fmt.Printf("\nSet: out of range %d \n", e.Floor)
+    return e.Orders
+  } //todo:ta vekk! litt for quickfix
+
+    e.Orders[order.Floor][order.Button].State = types.OS_UnacceptedOrder
+    //elevio.SetButtonLamp(order.Button, order.Floor, true) //todo move when several elevs
+
+    return e.Orders
 }
 
-//MUST BE PRIVATE METHOD - only used by orders_server
-func setOrder(order elevio.ButtonEvent){
-    orders[order.Floor][order.Button] = true
+func IsOrder(e types.Elevator, floor int, button elevio.ButtonType) bool {
+    //todo: vurder denne. Når skal den si at det er bestilling (= når skal den stoppe), skal den stoppe på unaccepted også?
+    if(floor < 0 || floor > 3){
+      fmt.Printf("\nIs: out of range %d \n", floor)
+      return false
+    } //todo: ta vekk! litt for quickfix
+
+
+    return (e.Orders[floor][button].State != types.OS_NoOrder)
 }
 
-func IsOrder(floor int, button elevio.ButtonType) bool {
-    return orders[floor][button]
-}
-
-func isOrderAbove(current_floor int) bool {
-	for floor := globalconstants.N_FLOORS; floor > current_floor; floor-- {
-        for button := 0; button < globalconstants.N_BUTTONS; button++ {
-            if IsOrder(floor, elevio.ButtonType(button)) {
+func isOrderAbove(e types.Elevator) bool {
+	for floor := e.Floor + 1; floor < constants.N_FLOORS; floor++ {
+        for button := 0; button < constants.N_BUTTONS; button++ {
+            if IsOrder(e, floor, elevio.ButtonType(button)) {
                 return true
             }
         }
@@ -57,10 +54,10 @@ func isOrderAbove(current_floor int) bool {
     return false
 }
 
-func isOrderBelow(current_floor int) bool {
-	for floor := 0; floor < current_floor; floor++ {
-        for button := 0; button < globalconstants.N_BUTTONS; button++ {
-            if IsOrder(floor, elevio.ButtonType(button)) {
+func isOrderBelow(e types.Elevator) bool {
+	for floor := 0; floor < e.Floor; floor++ {
+        for button := 0; button < constants.N_BUTTONS; button++ {
+            if IsOrder(e, floor, elevio.ButtonType(button)) {
                 return true
             }
         }
@@ -69,44 +66,45 @@ func isOrderBelow(current_floor int) bool {
 }
 
 
-func ShouldStop(current_floor int, direction elevio.MotorDirection) bool{
-	switch(direction){
+func ShouldStop(e types.Elevator) bool {
+	switch(e.Direction){
     case elevio.MD_Down:
-        return (IsOrder(current_floor, elevio.BT_HallDown) ||
-            IsOrder(current_floor, elevio.BT_Cab)      ||
-            !isOrderBelow(current_floor))
+        return (IsOrder(e, e.Floor, elevio.BT_HallDown) ||
+            IsOrder(e, e.Floor, elevio.BT_Cab)      ||
+            !isOrderBelow(e))
     case elevio.MD_Up:
-        return (IsOrder(current_floor, elevio.BT_HallUp)   ||
-            IsOrder(current_floor, elevio.BT_Cab)      ||
-            !isOrderAbove(current_floor))
+        return (IsOrder(e, e.Floor, elevio.BT_HallUp)   ||
+            IsOrder(e, e.Floor, elevio.BT_Cab)      ||
+            !isOrderAbove(e))
     case elevio.MD_Stop:
     default:
-        break
     }
     return true
 }
 
 
-func ChooseDirection(current_floor int, direction elevio.MotorDirection) elevio.MotorDirection {
+func ChooseDirection(e types.Elevator) elevio.MotorDirection {
 	// husk på å teste at heisen ikke kan kjøres fast hvis noen vil være kjipe
 
-	switch(direction){
-        //must use if else, go does not support " ? : "
-
+	switch(e.Direction){
     case elevio.MD_Up:
-        if isOrderAbove(current_floor) {
+        if isOrderAbove(e) {
             return elevio.MD_Up
-        } else if isOrderBelow(current_floor){
+        } else if isOrderBelow(e){
             return elevio.MD_Down
+        } else {
+            return elevio.MD_Stop
         }
-        return elevio.MD_Stop
-
-    case elevio.MD_Down: //Any reason why this one is left empty? If intentional, add in a comment #codeQuality
-    case elevio.MD_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
-
-        if  isOrderBelow(current_floor) {
+    case elevio.MD_Down:
+        if  isOrderBelow(e) {
             return elevio.MD_Down
-        } else if isOrderAbove(current_floor) {
+        } else if isOrderAbove(e) {
+            return elevio.MD_Up
+        }
+    case elevio.MD_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
+        if  isOrderBelow(e) {
+            return elevio.MD_Down
+        } else if isOrderAbove(e) {
             return elevio.MD_Up
         }
     }

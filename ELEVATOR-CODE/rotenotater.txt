@@ -1,0 +1,10 @@
+Eksempel, tanke:
+en heis utfører aldri ordren sin
+da kan den markere seg selv som ikke operational, gi seg selv en dummycaborder og reassigne orders til de andre
+når den klarer å utføre dummyorder er den operational igjen
+Egentlig så må de andre heisene være de som reassigner i tilfelle den egentlig er stuck i koden ellerno
+
+
+Ordermerger:
+Husk at den må sjekke for duplikat på bestillinger! Og så gi den til den med lavest indeks f eks
+dette løser problemet med at heis assigner ordre til seg selv når en kobler ut --> duplikat
