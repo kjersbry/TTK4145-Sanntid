@@ -27,6 +27,11 @@ type Order struct {
     State OrderState
 }
 
+type AssignedOrder struct {			//Used by orderassigner.AssignOrder
+	Order elevio.ButtonEvent
+	Elevator_ID string
+}
+
 type Elevator struct {
     Elevator_ID string
     State ElevatorState
@@ -35,7 +40,7 @@ type Elevator struct {
     Orders [constants.N_FLOORS][constants.N_BUTTONS]Order
 }
 
-
+/*The below functions are used for debugging*/
 
 func orderToString(o Order) string {
   switch(o.State){

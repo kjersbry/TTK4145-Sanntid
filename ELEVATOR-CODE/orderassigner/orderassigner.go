@@ -1,7 +1,7 @@
 package orderassigner
 
 import "../elevio"
-//import "../orders"
+//import "../types"
 
 func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- elevio.ButtonEvent){
 	for{

@@ -7,6 +7,7 @@ import (
  	"./orderassigner"
 	"./timer"
 	"./constants"
+	//"./synchelevs"
 )
 
 func main(){
@@ -29,6 +30,7 @@ func main(){
 
 	go elevio.PollFloorSensor(drv_floors)
 	fsm.InitElevator(drv_floors)
+	//synchelevs.InitSynchElevators()
 
 	//run
 	go elevio.PollButtons(drv_buttons)
