@@ -6,7 +6,6 @@ import (
  	"./fsm" 
  	"./orderassigner"
 	"./timer"
-	"time"
 	"./constants"
 )
 
@@ -51,7 +50,7 @@ func main(){
 	fin := make(chan int)
 	for{
 		select{
-			case <- fin
+		case <- fin:
 		}
 	}
 }

@@ -1,14 +1,25 @@
 package orderassigner
 
 import "../elevio"
-import "../orders"
+//import "../orders"
 
+func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- elevio.ButtonEvent){
+	for{
+		select{
+		case order:= <- drv_button:
+			//her legges assignment algorithm
+			//en heis---> kun dette:
+			add_order <- order //skriver resultat til order
+		}
+	}	
+}
 
 //This function is responsible for reciving unassigned orders from elevator_io.
 //The order is evaluated by assignAlg and assigned to an elevator.
 //The the order and the ID of the assigned elevator is sent to a channel.
 //Note that this function will run as a never ending gorountine in main.
 
+/*
 func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- orders.AssignedOrder){
 	for{
 		select{
@@ -34,7 +45,7 @@ func assignAlg(new_order) int {
 
 	/*Note the following alternative: As of now, the readElevator function is called once for every elevator. We may be better off
 	by making one function call, e.g. readAllElevators. And then go through the returned array. Such a function would be usefull for 
-	the network mudule as well*/
+	the network mudule as well*//*
 
 	for _, elevator := range states.WorkingElevators() {               //WorkingElevators must be created
 
@@ -42,7 +53,7 @@ func assignAlg(new_order) int {
 												//The sturcture of the order array should be clearly defined before this line is added.
 
 
-		currentElevator = elevatorstates.ReadElevator(/*elevator <- Specifying witch elevator that will be examined*/)
+		currentElevator = elevatorstates.ReadElevator(/*elevator <- Specifying witch elevator that will be examined*//*)
 		currentDuration = timeToIdle(currentElevator)
 
 		if(currentDuration < best_duration){
@@ -83,7 +94,7 @@ func timeToIdle(e Elevator) int {
 			//Clear order
 			duration += 3 //Put in proper constant name
 			e.Direction = orders.ChooseDirection(e.Floor, e.Direction)
-			if(e.Direction == 0 /*MD_Stop*/){
+			if(e.Direction == 0 /*MD_Stop*//*){
 				return duration
 			}
 		}
@@ -91,4 +102,4 @@ func timeToIdle(e Elevator) int {
 		duration +=  5		//TravelTime //Insert the proper operator
 	}
 
-}
+}*/

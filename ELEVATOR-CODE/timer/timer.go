@@ -17,7 +17,7 @@ func DoorTimer(start <-chan bool, door_timeout chan<- bool){
 				//fmt.Printf("\n\nDOOR OPEN\n")
 			}
 		default:
-			if (time.Now().Sub(timestamp) > constants.DOOR_OPEN_SEC) && is_active {
+			if (time.Now().Sub(timestamp) > time.Second*constants.DOOR_OPEN_SEC) && is_active {
 				door_timeout <- true
 				is_active = false
 				//fmt.Printf("\n\ntimer DOOR CLOSE\n")

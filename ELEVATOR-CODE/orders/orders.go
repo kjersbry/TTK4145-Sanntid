@@ -96,11 +96,7 @@ func ChooseDirection(e types.Elevator) elevio.MotorDirection {
             return elevio.MD_Stop
         }
     case elevio.MD_Down:
-        if  isOrderBelow(e) {
-            return elevio.MD_Down
-        } else if isOrderAbove(e) {
-            return elevio.MD_Up
-        }
+        fallthrough
     case elevio.MD_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
         if  isOrderBelow(e) {
             return elevio.MD_Down
