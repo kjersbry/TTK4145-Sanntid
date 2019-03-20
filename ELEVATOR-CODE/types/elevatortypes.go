@@ -1,11 +1,9 @@
-package states
+package types
 import (
     "../elevio"
-    "../globalconstants"
     "fmt"
     "strconv"
 )
-
 
 type ElevatorState int
 const (
@@ -29,12 +27,13 @@ type Order struct {
 }
 
 type Elevator struct {
-    Elevator_ID int
+    Elevator_ID string
     State ElevatorState
     Floor int
     Direction elevio.MotorDirection   //does only change to stop when IDLE, not when stopping for order
     Orders [globalconstants.N_FLOORS][globalconstants.N_BUTTONS]Order
 }
+
 
 
 func orderToString(o Order) string {

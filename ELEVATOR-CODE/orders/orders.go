@@ -1,38 +1,38 @@
 package orders
 import (
     "../elevio"
-    "../globalconstants"
-    "../states"
+    "../types"
+    "../constants"
     "fmt"
 )
 
-func ClearAtCurrentFloor(e states.Elevator) [globalconstants.N_FLOORS][globalconstants.N_BUTTONS]states.Order {
+func ClearAtCurrentFloor(e types.Elevator) [constants.N_FLOORS][constants.N_BUTTONS]types.Order {
     if(e.Floor < 0 || e.Floor > 3){
       fmt.Printf("\nclear: out of range %d \n", e.Floor)
       return e.Orders
     } //todo: ta vekk! litt for quickfix
 
-    for i := 0; i < globalconstants.N_BUTTONS; i++ {
-        e.Orders[e.Floor][i].State = states.OS_NoOrder
+    for i := 0; i < constants.N_BUTTONS; i++ {
+        e.Orders[e.Floor][i].State = types.OS_NoOrder
         //elevio.SetButtonLamp(elevio.ButtonType(i), e.Floor, false) //todo move when several elevs
     }
 
     return e.Orders
 }
 
-func SetOrder(e states.Elevator, order elevio.ButtonEvent) [globalconstants.N_FLOORS][globalconstants.N_BUTTONS]states.Order {
+func SetOrder(e types.Elevator, order elevio.ButtonEvent) [constants.N_FLOORS][constants.N_BUTTONS]types.Order {
   if(order.Floor < 0 || order.Button > 3){
     fmt.Printf("\nSet: out of range %d \n", e.Floor)
     return e.Orders
   } //todo:ta vekk! litt for quickfix
 
-    e.Orders[order.Floor][order.Button].State = states.OS_UnacceptedOrder
+    e.Orders[order.Floor][order.Button].State = types.OS_UnacceptedOrder
     //elevio.SetButtonLamp(order.Button, order.Floor, true) //todo move when several elevs
 
     return e.Orders
 }
 
-func IsOrder(e states.Elevator, floor int, button elevio.ButtonType) bool {
+func IsOrder(e types.Elevator, floor int, button elevio.ButtonType) bool {
     //todo: vurder denne. Når skal den si at det er bestilling (= når skal den stoppe), skal den stoppe på unaccepted også?
     if(floor < 0 || floor > 3){
       fmt.Printf("\nIs: out of range %d \n", floor)
@@ -40,12 +40,12 @@ func IsOrder(e states.Elevator, floor int, button elevio.ButtonType) bool {
     } //todo: ta vekk! litt for quickfix
 
 
-    return (e.Orders[floor][button].State != states.OS_NoOrder)
+    return (e.Orders[floor][button].State != types.OS_NoOrder)
 }
 
-func isOrderAbove(e states.Elevator) bool {
-	for floor := e.Floor + 1; floor < globalconstants.N_FLOORS; floor++ {
-        for button := 0; button < globalconstants.N_BUTTONS; button++ {
+func isOrderAbove(e types.Elevator) bool {
+	for floor := e.Floor + 1; floor < constants.N_FLOORS; floor++ {
+        for button := 0; button < constants.N_BUTTONS; button++ {
             if IsOrder(e, floor, elevio.ButtonType(button)) {
                 return true
             }
@@ -54,9 +54,9 @@ func isOrderAbove(e states.Elevator) bool {
     return false
 }
 
-func isOrderBelow(e states.Elevator) bool {
+func isOrderBelow(e types.Elevator) bool {
 	for floor := 0; floor < e.Floor; floor++ {
-        for button := 0; button < globalconstants.N_BUTTONS; button++ {
+        for button := 0; button < constants.N_BUTTONS; button++ {
             if IsOrder(e, floor, elevio.ButtonType(button)) {
                 return true
             }
@@ -66,7 +66,7 @@ func isOrderBelow(e states.Elevator) bool {
 }
 
 
-func ShouldStop(e states.Elevator) bool {
+func ShouldStop(e types.Elevator) bool {
 	switch(e.Direction){
     case elevio.MD_Down:
         return (IsOrder(e, e.Floor, elevio.BT_HallDown) ||
@@ -83,7 +83,7 @@ func ShouldStop(e states.Elevator) bool {
 }
 
 
-func ChooseDirection(e states.Elevator) elevio.MotorDirection {
+func ChooseDirection(e types.Elevator) elevio.MotorDirection {
 	// husk på å teste at heisen ikke kan kjøres fast hvis noen vil være kjipe
 
 	switch(e.Direction){

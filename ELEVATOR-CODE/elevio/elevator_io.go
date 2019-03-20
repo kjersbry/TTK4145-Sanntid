@@ -4,13 +4,13 @@ import "time"
 import "sync"
 import "net"
 import "fmt"
-import "../globalconstants"
+import "../constants"
 
 
 const _pollRate = 20 * time.Millisecond
 
 var _initialized bool = false
-var _numFloors int = globalconstants.N_FLOORS
+var _numFloors int = constants.N_FLOORS
 var _mtx sync.Mutex
 var _conn net.Conn
 

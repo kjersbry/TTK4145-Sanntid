@@ -3,16 +3,17 @@ package main
 import (
 	"./elevio"
  	"./globalconstants"
- 	"./states"
- 	"./fsm"
+ 	"./types"
+ 	"./fsm" 
  	"./orderassigner"
-	 "./timer"
-	 "time"
+	"./timer"
+	"time"
+	"./constants"
 )
 
 func main(){
 	//initialization
-	elevio.Init("localhost:15657", globalconstants.N_FLOORS)
+	elevio.Init("localhost:15657", constants.N_FLOORS)
 	//order.Init(numFloors, numElevators)
 	drv_buttons := make(chan elevio.ButtonEvent)
 	drv_floors  := make(chan int)
@@ -24,8 +25,8 @@ func main(){
 
 	//Server channels
 	clear_floor := make(chan int) //FSM tells order to clear order
-	update_ID := make(chan int) //todo: kan hende vi bare bør droppe denne, vente og se
-	update_state := make(chan states.ElevatorState)
+	update_ID := make(chan string) //todo: kan hende vi bare bør droppe denne, vente og se
+	update_state := make(chan types.ElevatorState)
 	update_floor := make(chan int)
 	update_direction := make(chan elevio.MotorDirection)
 
@@ -42,6 +43,9 @@ func main(){
 	//Servers
 	//go orders.UpdateOrders(add_order, clear_floor, order_added)
 
+
+	//go peers.Receiver(noe, peerupdatech)
+	//go noe.Handlepeerupdates(peerupdatech)
 
 	for{
 		time.Sleep(time.Second*100)

@@ -3,15 +3,15 @@ package lamps
 //may be moved to fsm or something
 
 import (
-	"../globalconstants"
 	"../orders"
 	"../elevio"
-	"../states"
+	"../types"
+	"../constants"
 )
 
-func SetAllLamps(e states.Elevator){
-	for i:= 0; i < globalconstants.N_FLOORS; i++{
-		for j:= 0; j < globalconstants.N_BUTTONS; j++{
+func SetAllLamps(e types.Elevator){
+	for i:= 0; i < constants.N_FLOORS; i++{
+		for j:= 0; j < constants.N_BUTTONS; j++{
 			if(orders.IsOrder(e, i, elevio.ButtonType(j))){
 				elevio.SetButtonLamp(elevio.ButtonType(j), i, true)
 			} else {
