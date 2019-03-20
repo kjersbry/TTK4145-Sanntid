@@ -1,6 +1,7 @@
 package types
 import (
     "../elevio"
+    "../constants"
     "fmt"
     "strconv"
 )
@@ -31,7 +32,7 @@ type Elevator struct {
     State ElevatorState
     Floor int
     Direction elevio.MotorDirection   //does only change to stop when IDLE, not when stopping for order
-    Orders [globalconstants.N_FLOORS][globalconstants.N_BUTTONS]Order
+    Orders [constants.N_FLOORS][constants.N_BUTTONS]Order
 }
 
 
@@ -48,8 +49,8 @@ func orderToString(o Order) string {
 
 func PrintOrders(e Elevator){
   fmt.Printf("\n\n-----Queue------\n")
-  for i:= 0; i < globalconstants.N_FLOORS; i++{
-    for j:= 0; j < globalconstants.N_BUTTONS; j++{
+  for i:= 0; i < constants.N_FLOORS; i++{
+    for j:= 0; j < constants.N_BUTTONS; j++{
       fmt.Printf("%s ", orderToString(e.Orders[i][j]))
     }
     fmt.Printf("\n")

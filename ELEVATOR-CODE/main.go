@@ -2,7 +2,6 @@ package main
 
 import (
 	"./elevio"
- 	"./globalconstants"
  	"./types"
  	"./fsm" 
  	"./orderassigner"
@@ -14,7 +13,6 @@ import (
 func main(){
 	//initialization
 	elevio.Init("localhost:15657", constants.N_FLOORS)
-	//order.Init(numFloors, numElevators)
 	drv_buttons := make(chan elevio.ButtonEvent)
 	drv_floors  := make(chan int)
 	order_added := make(chan int) //for informing FSM about order update
@@ -40,14 +38,20 @@ func main(){
 	go orderassigner.AssignOrder(drv_buttons, add_order)
 	go timer.DoorTimer(start_door_timer, door_timeout)
 
-	//Servers
-	//go orders.UpdateOrders(add_order, clear_floor, order_added)
-
+	//go bcast.Transmitter()
+	//go bcast.Receiver()
+	//go transmitelevs
+	//go receiveelevs
 
 	//go peers.Receiver(noe, peerupdatech)
 	//go noe.Handlepeerupdates(peerupdatech)
 
+
+	/*Infinite loop: */
+	fin := make(chan int)
 	for{
-		time.Sleep(time.Second*100)
+		select{
+			case <- fin
+		}
 	}
 }
