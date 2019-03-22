@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-var all_elevs types.ElevInfoPacket
-
+var all_elevs map[string]types.Elevator
+var Local_elev_ID string
 
 func InitSynchElevators(drv_floors <-chan int){
 	all_elevs.Elev_map = make(map[string]types.Elevator)
@@ -64,10 +64,10 @@ func InitElevator() types.Elevator {
 
 func UpdateElevator(
 	/*FSM channels, single elevator*/
-	update_state <-chan types.ElevatorState, update_floor <-chan int, update_direction <-chan elevio.MotorDirection, 
+	update_state <-chan types.ElevatorState, update_floor <-chan int, update_direction <-chan elevio.MotorDirection,
 	clear_floor <-chan int, floor_reached chan<- bool, order_added chan<- int,
 	/*---*/
-	add_order <-chan types.AssignedOrder, elev_rx <-chan types.ElevInfoPacket){
+	add_order <-chan types.AssignedOrder, elev_rx <-chan types.Elevator_test){
 		for {
     	select{
       case new_state:= <- update_state:
@@ -96,12 +96,15 @@ func UpdateElevator(
 			case <- clear_floor:
 				setOrderList(orders.ClearAtCurrentFloor(all_elevs.Elev_map[all_elevs.Elev_ID]), all_elevs.Elev_ID)
 				lamps.SetAllLamps(all_elevs.Elev_map[all_elevs.Elev_ID])
-			
+
 			case received := <- elev_rx:
-				if(received.Elev_ID == all_elevs.Elev_ID){
+				fmt.Printf("\n\nID: %s\nDir: %s\nOrder1-cab: %s\n", received.Elevator_ID,
+					types.DirToString(received.Direction), types.OrderToString(received.Orders[0][0][0]))
+				/*if(received.Elev_ID == all_elevs.Elev_ID){
 					break
 				}
 				for key, val := range received.Elev_map {
+					//fmt.Println("Ding")
 					if !keyExists(key) {
 						all_elevs.Elev_map[key] = val
 						fmt.Printf("\nAdded new elev!\n")
@@ -111,29 +114,62 @@ func UpdateElevator(
 							setFields(val.State, val.Floor, val.Direction, key)
 						}
 					}
-				}
+				}*/
 				//merge orders
 				//funksjon for det
-				//her, eller ett hakk ut?				
+				//her, eller ett hakk ut?
 			}
     }
 }
 
 func TestPrintAllElevators(){
 	for{
-		for key, val := range all_elevs.Elev_map {
+		fmt.Printf("\n\n")
+		//for key, val := range all_elevs.Elev_map {
+		for key, _ := range all_elevs.Elev_map {
 			/*TEST:*/
 			fmt.Printf("\nElev: %s", key)
-			types.PrintStates(val)
+			//types.PrintStates(val)
 		}
 		time.Sleep(time.Second*5)
 	}
 }
 
-func TransmitElev(elev_tx chan<- types.ElevInfoPacket){
+//tar inn ID --> kan lett requeste og wrappe annen heis hvis det trengs
+func wrap_elevator(elevator_ID string) Wrapped_Elevator {
+	temp := all_elevs[elevator_ID] // = non-wrapped elev
+	var wrapped types.Wrapped_Elevator
+	wrapped.Elevator_ID = temp.Elevator_ID
+	wrapped.State = temp.State
+	wrapped.Floor = temp.Floor
+	wrapped.Direction = temp.Direction
+
+	//wrap orders
+	for key, val := range all_elevs {
+		//wrapped.Orders[i] = val
+	}
+}
+
+func TransmitElev(elev_tx chan<- types.Elevator_test){
+	//bruk wrapper(LOCAL_ID)
+
+	temp := all_elevs.Elev_map[all_elevs.Elev_ID]
+	var test_elev types.Elevator_test
+	test_elev.Elevator_ID = temp.Elevator_ID
+
 	for {
+		temp = all_elevs.Elev_map[all_elevs.Elev_ID]
+
+		test_elev.State = temp.State
+		test_elev.Floor = temp.Floor
+		test_elev.Direction = temp.Direction
+		for i := 0; i < constants.N_ELEVATORS; i++{
+			test_elev.Orders[i] = temp.Orders
+		}
 	//	for e := 0; e < constants.N_ELEVATORS - 1; e ++{
-			elev_tx <- all_elevs
+			//fmt.Printf("\n\nID: %s\nOrders dim: %dx%dx%d\n\n", test_elev.Elevator_ID, len(test_elev.Orders),
+						//len(test_elev.Orders[1]), len(test_elev.Orders[1][1]))
+			elev_tx <- test_elev
 			time.Sleep(time.Millisecond*constants.TRANSMIT_MS)
 	//	}
 	}
@@ -147,7 +183,7 @@ func ReadElevator() types.Elevator {
 
 func keyExists(key string) bool {
 	_, exists := all_elevs.Elev_map[key]
-	return exists 
+	return exists
 }
 
 //Workaround functions because go does not allow setting structs in maps directly

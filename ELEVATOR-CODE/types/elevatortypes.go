@@ -41,14 +41,24 @@ type Elevator struct {
     //Is_Operational bool
 }
 
-type ElevInfoPacket struct {
-	Elev_ID string 
-	Elev_map map[string]Elevator 
+type Wrapped_Elevator struct {
+    Elevator_ID string
+    State ElevatorState
+    Floor int
+    Direction elevio.MotorDirection   //does only change to stop when IDLE, not when stopping for order
+    Orders [constants.N_ELEVATORS][constants.N_FLOORS][constants.N_BUTTONS]Order
+    //Is_Operational bool
 }
+
+/*
+type ElevInfoPacket struct {
+	Elev_ID string
+	Elev_map map[string]Elevator
+}*/
 
 /*The below functions are used for debugging*/
 
-func orderToString(o Order) string {
+func OrderToString(o Order) string {
   switch(o.State){
   case OS_NoOrder:
     return "No"
@@ -62,7 +72,7 @@ func PrintOrders(e Elevator){
   fmt.Printf("\n\n-----Queue------\n")
   for i:= 0; i < constants.N_FLOORS; i++{
     for j:= 0; j < constants.N_BUTTONS; j++{
-      fmt.Printf("%s ", orderToString(e.Orders[i][j]))
+      fmt.Printf("%s ", OrderToString(e.Orders[i][j]))
     }
     fmt.Printf("\n")
   }
