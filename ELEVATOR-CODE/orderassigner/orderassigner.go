@@ -1,15 +1,19 @@
 package orderassigner
 
-import "../elevio"
-//import "../types"
+import (
+	"../elevio"
+	"../types"
+	"../states"
+)
 
-func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- elevio.ButtonEvent){
+func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.AssignedOrder){
 	for{
 		select{
 		case order:= <- drv_button:
 			//her legges assignment algorithm
 			//en heis---> kun dette:
-			add_order <- order //skriver resultat til order
+			dummyassigned := types.AssignedOrder{states.ReadElevator().Elevator_ID, order}
+			add_order <- dummyassigned //skriver resultat til order
 		}
 	}	
 }

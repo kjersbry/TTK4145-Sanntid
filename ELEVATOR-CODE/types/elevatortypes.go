@@ -28,8 +28,8 @@ type Order struct {
 }
 
 type AssignedOrder struct {			//Used by orderassigner.AssignOrder
-	Order elevio.ButtonEvent
-	Elevator_ID string
+  Elevator_ID string
+  Order elevio.ButtonEvent
 }
 
 type Elevator struct {
@@ -38,6 +38,12 @@ type Elevator struct {
     Floor int
     Direction elevio.MotorDirection   //does only change to stop when IDLE, not when stopping for order
     Orders [constants.N_FLOORS][constants.N_BUTTONS]Order
+    //Is_Operational bool
+}
+
+type ElevInfoPacket struct {
+	Elev_ID string 
+	Elev_map map[string]Elevator 
 }
 
 /*The below functions are used for debugging*/

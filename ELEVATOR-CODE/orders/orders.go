@@ -19,7 +19,7 @@ func ClearAtCurrentFloor(e types.Elevator) [constants.N_FLOORS][constants.N_BUTT
 
     return e.Orders
 }
-
+/*
 func SetOrder(e types.Elevator, order elevio.ButtonEvent) [constants.N_FLOORS][constants.N_BUTTONS]types.Order {
   if(order.Floor < 0 || order.Button > 3){
     fmt.Printf("\nSet: out of range %d \n", e.Floor)
@@ -30,7 +30,7 @@ func SetOrder(e types.Elevator, order elevio.ButtonEvent) [constants.N_FLOORS][c
     //elevio.SetButtonLamp(order.Button, order.Floor, true) //todo move when several elevs
 
     return e.Orders
-}
+}*/
 
 func IsOrder(e types.Elevator, floor int, button elevio.ButtonType) bool {
     //todo: vurder denne. Når skal den si at det er bestilling (= når skal den stoppe), skal den stoppe på unaccepted også?
