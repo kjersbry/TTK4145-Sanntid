@@ -14,7 +14,7 @@ import (
 func main(){
 	//initialization
 	//15657, 59334, 46342, 33922, 50945, 36732
-	elevio.Init("localhost:59334", constants.N_FLOORS)
+	elevio.Init("localhost:33922", constants.N_FLOORS)
 	drv_buttons := make(chan elevio.ButtonEvent)
 	drv_floors  := make(chan int)
 	order_added := make(chan int) //for informing FSM about order update
@@ -30,8 +30,8 @@ func main(){
 	update_floor := make(chan int)
 	update_direction := make(chan elevio.MotorDirection)
 
-	elev_rx := make(chan types.Elevator_test)
-	elev_tx := make(chan types.Elevator_test)
+	elev_rx := make(chan types.Wrapped_Elevator)
+	elev_tx := make(chan types.Wrapped_Elevator)
 
 
 	go elevio.PollFloorSensor(drv_floors)

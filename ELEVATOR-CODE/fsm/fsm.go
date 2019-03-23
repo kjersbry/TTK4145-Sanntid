@@ -23,7 +23,7 @@ func FSM(floor_reached <-chan bool, clear_floor chan<- int, order_added <-chan i
 		select {
 		case <- floor_reached:
 			if (onFloorArrival()){ //stops on order
-				clear_floor <- states.ReadElevator().Floor
+				clear_floor <- states.ReadLocalElevator().Floor
 				start_door_timer <- true
 				update_state <- types.ES_DoorOpen
 			}
@@ -48,11 +48,11 @@ func FSM(floor_reached <-chan bool, clear_floor chan<- int, order_added <-chan i
 
 func onFloorArrival() bool  {
 	fmt.Printf("\nonFloorArrival\n")
-	elevio.SetFloorIndicator(states.ReadElevator().Floor)
+	elevio.SetFloorIndicator(states.ReadLocalElevator().Floor)
 
-	switch(states.ReadElevator().State){
+	switch(states.ReadLocalElevator().State){
 	case types.ES_Moving:
-		if orders.ShouldStop(states.ReadElevator()) {
+		if orders.ShouldStop(states.ReadLocalElevator()) {
 			elevio.SetMotorDirection(elevio.MD_Stop)
 			elevio.SetDoorOpenLamp(true)
 			
@@ -70,10 +70,10 @@ func onDoorTimeout() (types.ElevatorState, elevio.MotorDirection) {
 	var dir elevio.MotorDirection
 	var state types.ElevatorState
 
-	switch(states.ReadElevator().State){
+	switch(states.ReadLocalElevator().State){
 	case types.ES_DoorOpen:
 		elevio.SetDoorOpenLamp(false)
-		dir = orders.ChooseDirection(states.ReadElevator())
+		dir = orders.ChooseDirection(states.ReadLocalElevator())
 		elevio.SetMotorDirection(dir)
 		fmt.Printf("dir: %s", types.DirToString(dir))
 
@@ -91,24 +91,24 @@ func onDoorTimeout() (types.ElevatorState, elevio.MotorDirection) {
 func onListUpdate(floor int) (types.ElevatorState, elevio.MotorDirection, bool) {
 	fmt.Printf("\nonListUpdate\n")
 
-	state := states.ReadElevator().State
-	dir := states.ReadElevator().Direction
+	state := states.ReadLocalElevator().State
+	dir := states.ReadLocalElevator().Direction
 	start_timer := false
 
 
 	switch(state){
 	case types.ES_DoorOpen:
-		if(states.ReadElevator().Floor == floor){
+		if(states.ReadLocalElevator().Floor == floor){
 			start_timer = true
 		}
 
 	case types.ES_Idle:
-		if(states.ReadElevator().Floor == floor){
+		if(states.ReadLocalElevator().Floor == floor){
 			elevio.SetDoorOpenLamp(true)
 			start_timer = true
 			state = types.ES_DoorOpen
 		} else {
-			dir = orders.ChooseDirection(states.ReadElevator())
+			dir = orders.ChooseDirection(states.ReadLocalElevator())
 			elevio.SetMotorDirection(dir)
 			state = types.ES_Moving
 		}

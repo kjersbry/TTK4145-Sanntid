@@ -4,6 +4,7 @@ import (
     "../constants"
     "fmt"
     "strconv"
+    //"time"
 )
 
 type ElevatorState int
@@ -25,6 +26,7 @@ type Order struct {
     //litt midlertidig oppsett, hvordan skal denne være?
     ID int64
     State OrderState
+    //Timestamp time.Time
 }
 
 type AssignedOrder struct {			//Used by orderassigner.AssignOrder
@@ -46,15 +48,10 @@ type Wrapped_Elevator struct {
     State ElevatorState
     Floor int
     Direction elevio.MotorDirection   //does only change to stop when IDLE, not when stopping for order
-    Orders [constants.N_ELEVATORS][constants.N_FLOORS][constants.N_BUTTONS]Order
+    Orders map[string][constants.N_FLOORS][constants.N_BUTTONS]Order
     //Is_Operational bool
 }
 
-/*
-type ElevInfoPacket struct {
-	Elev_ID string
-	Elev_map map[string]Elevator
-}*/
 
 /*The below functions are used for debugging*/
 

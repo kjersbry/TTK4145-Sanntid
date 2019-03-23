@@ -12,7 +12,7 @@ func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.As
 		case order:= <- drv_button:
 			//her legges assignment algorithm
 			//en heis---> kun dette:
-			dummyassigned := types.AssignedOrder{states.ReadElevator().Elevator_ID, order}
+			dummyassigned := types.AssignedOrder{states.ReadLocalElevator().Elevator_ID, order}
 			add_order <- dummyassigned //skriver resultat til order
 		}
 	}	
