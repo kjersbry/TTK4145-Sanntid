@@ -18,7 +18,7 @@ type floor_time struct {	//Bad name.
 	is_Operational bool			//Her kan error state puttes -> Enumeration, som Kjersti foreslo
 }
 
-func operationObserver (elev_map map[string]types.Elevator, Operation_Update chan<- Connection_Event) {
+func OperationObserver (elev_map map[string]types.Elevator, Operation_Update chan<- Connection_Event) {
 	var update Operation_Event
 	lastChange := make(map[string]floor_time)
 	
