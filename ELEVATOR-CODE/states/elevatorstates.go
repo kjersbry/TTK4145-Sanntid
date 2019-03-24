@@ -123,14 +123,14 @@ func UpdateElevator(
 			case requestedID := <- sendwrap_request: //when an elev needs its backup
 				elev_tx <- wrapElevator(requestedID)
 			
-			case update:= <- connectionUpdate	//Untested case
+			case update:= <- connectionUpdate:	//Untested case
 				if update.Connected {
 					all_elevs[update.Elevator_ID].Connected = true
 				} else {
 					all_elevs[update.Elevator_ID].Connected = false
 					orderReassigner(update.Elevator_ID, false)
 				}
-			case update:= <- operationUpdate	//Untested case
+			case update:= <- operationUpdate:	//Untested case
 				if update.isOperational {
 					all_elevs[update.Elevator_ID].isOperational = true
 				} else {
