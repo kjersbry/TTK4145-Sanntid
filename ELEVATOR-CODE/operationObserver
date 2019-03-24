@@ -1,0 +1,53 @@
+package operationObserever
+
+import "time"
+
+//Note: 1. The datatypes and the function probably don't need their own file. But, as of now, i don't see any better place to put them
+//2. Nothing in this file has been properly tested.
+
+//finding unoperational elevator
+
+type Operation_Event struct {
+	Elevator_ID string
+	isOperational   bool
+}
+
+type floor_time struct {	//Bad name. 
+	LastFloor int
+	timeOfChange time.Time
+	is_Operational bool			//Her kan error state puttes -> Enumeration, som Kjersti foreslo
+}
+
+func operationObserver (elev_map map[string]types.Elevator, Operation_Update chan<- Connection_Event) {
+	var update Operation_Event
+	lastChange := make(map[string]floor_time)
+	
+	for {			
+		for k, v := range elev_map {
+			if _, keyExists := lastChange[k]; !keyExists {
+				if k.is_Operational = false {			//Snakk med Kjersti om denne antagelsen
+					lastChange[k] = floor_time{v.Floor, time.Now(), false}
+				}else {
+					lastChange[k] = floor_time{v.Floor, time.Now(), true}		
+				}
+			} else {
+				if lastChange[k].LastFloor !=  v.Floor {
+					if lastChange[k].is_Operational == false {
+						lastChange[k].is_Operational == true
+						update = {k, true}
+						Operation_Update <- update
+					}
+					lastChange[k].LastFloor =  v.Floor
+					lastChange[k].timeOfChange =  time.Now()
+				} else if time.Now().Sub(lastChange[k].timeOfChange) > 15 { //Put in proper constant name
+					lastChange[k].is_Operational = false					//The exact value is up for debate
+					update = {k, false}
+					Operation_Update = update
+				}
+				
+
+			}		
+		}
+		time.Sleep(time.Second*5)  //Is this done correctly?
+	}
+}
