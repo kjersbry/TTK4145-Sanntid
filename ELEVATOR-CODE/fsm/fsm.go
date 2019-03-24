@@ -4,7 +4,7 @@ import (
 	"../types"
 	"../elevio"
 	"../states"
-	"fmt"
+	//"fmt"
 )
 /*
 Init between floors kjøres hver gang
@@ -47,7 +47,7 @@ func FSM(floor_reached <-chan bool, clear_floor chan<- int, order_added <-chan i
 
 
 func onFloorArrival() bool  {
-	fmt.Printf("\nonFloorArrival\n")
+	//fmt.Printf("\nonFloorArrival\n")
 	elevio.SetFloorIndicator(states.ReadLocalElevator().Floor)
 
 	switch(states.ReadLocalElevator().State){
@@ -65,7 +65,7 @@ func onFloorArrival() bool  {
 }
 
 func onDoorTimeout() (types.ElevatorState, elevio.MotorDirection) {
-	fmt.Printf("\nonDoorTimeout start\n")
+	//fmt.Printf("\nonDoorTimeout start\n")
 
 	var dir elevio.MotorDirection
 	var state types.ElevatorState
@@ -75,21 +75,21 @@ func onDoorTimeout() (types.ElevatorState, elevio.MotorDirection) {
 		elevio.SetDoorOpenLamp(false)
 		dir = orders.ChooseDirection(states.ReadLocalElevator())
 		elevio.SetMotorDirection(dir)
-		fmt.Printf("dir: %s", types.DirToString(dir))
+		//fmt.Printf("dir: %s", types.DirToString(dir))
 
 		if(dir == elevio.MD_Stop){
-			fmt.Printf("\n chosen dir was stop")
+			//fmt.Printf("\n chosen dir was stop")
 			state = types.ES_Idle
 			} else {
 			state = types.ES_Moving
 		}
 	}
-	fmt.Printf("\nonDoorTimeout end\n")
+	//fmt.Printf("\nonDoorTimeout end\n")
 	return state, dir
 }
 
 func onListUpdate(floor int) (types.ElevatorState, elevio.MotorDirection, bool) {
-	fmt.Printf("\nonListUpdate\n")
+	//fmt.Printf("\nonListUpdate\n")
 
 	state := states.ReadLocalElevator().State
 	dir := states.ReadLocalElevator().Direction

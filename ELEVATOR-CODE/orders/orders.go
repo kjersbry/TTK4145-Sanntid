@@ -14,7 +14,7 @@ func ClearAtCurrentFloor(e types.Elevator) [constants.N_FLOORS][constants.N_BUTT
 
     for i := 0; i < constants.N_BUTTONS; i++ {
         e.Orders[e.Floor][i].State = types.OS_NoOrder
-        //elevio.SetButtonLamp(elevio.ButtonType(i), e.Floor, false) //todo move when several elevs
+        e.Orders[e.Floor][i].Counter++
     }
 
     return e.Orders
@@ -27,7 +27,6 @@ func SetOrder(e types.Elevator, order elevio.ButtonEvent) [constants.N_FLOORS][c
   } //todo:ta vekk! litt for quickfix
 
     e.Orders[order.Floor][order.Button].State = types.OS_UnacceptedOrder
-    //elevio.SetButtonLamp(order.Button, order.Floor, true) //todo move when several elevs
 
     return e.Orders
 }*/

@@ -24,7 +24,7 @@ const (
 
 type Order struct {
     //litt midlertidig oppsett, hvordan skal denne være?
-    ID int64
+    Counter int64
     State OrderState
     //Timestamp time.Time
 }
@@ -107,7 +107,7 @@ func elevToString(e Elevator) string {
 }
 
 func PrintStates(e Elevator){
-  fmt.Printf("\n\n-----States------\n")
+  fmt.Printf("\n-----States------\n")
   fmt.Printf("%s", elevToString(e))
   fmt.Printf("\n----------------\n\n")
 }

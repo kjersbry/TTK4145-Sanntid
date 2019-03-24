@@ -21,27 +21,22 @@ func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.As
 //This function is responsible for reciving unassigned orders from elevator_io.
 //The order is evaluated by assignAlg and assigned to an elevator.
 //The the order and the ID of the assigned elevator is sent to a channel.
-//Note that this function will run as a never ending gorountine in main.
-
-/*
-func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- orders.AssignedOrder){
+/*func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.AssignedOrder){
 	for{
 		select{
 		case order:= <- drv_button:
-
-			//Note: The 3 lines of code below are not tested.
-			selected_elevator := assignAlg(order)		//The order gets assgined to an elevator
+			selected_elevator := assignAlg(order)
 			assgined_order := AssignedOrder{order, selected_elevator}
-			add_order <- assigned_order //skriver resultat til order
+			add_order <- assigned_order
 		}
 	}	
-}
+}*/
 
-//This function adds the new order to the que of every avaible elevator. (Only done localy)
+//This function adds the new order to the que of every avaible elevator. (Only done locally)
 //the function timeToIdle is run once per elevator. 
-//It returns the ID of the elevator with the lowest return value from timeToIdle   (These explenations very poor --> UPDATE)
-func assignAlg(new_order) int {
-	var best_chooice int 
+//It returns the ID of the elevator with the lowest return value from timeToIdle
+/*func assignAlg(new_order) int {
+	var best_choice int 
 	var best_duration int
 
 	var currentElevator elevatorstates.Elevator
@@ -49,8 +44,8 @@ func assignAlg(new_order) int {
 
 	/*Note the following alternative: As of now, the readElevator function is called once for every elevator. We may be better off
 	by making one function call, e.g. readAllElevators. And then go through the returned array. Such a function would be usefull for 
-	the network mudule as well*//*
-
+	the network mudule as well*/
+/*
 	for _, elevator := range states.WorkingElevators() {               //WorkingElevators must be created
 
 		//add new_order to current elevator   <-The appropriate function should be made and saved in orders.
@@ -65,9 +60,9 @@ func assignAlg(new_order) int {
 		} 
 	}
 
-	return best_chooice
-}
-
+	return best_choice
+}*/
+/*
 
 //TimeToIdle gives an estimate of how much that time that will elapse before an elevator as handled all its requests.
 func timeToIdle(e Elevator) int {

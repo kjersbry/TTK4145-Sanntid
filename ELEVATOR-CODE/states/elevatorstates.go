@@ -10,7 +10,6 @@ import (
 	"os"
 	"time"
 )
-
 var all_elevs map[string]types.Elevator
 var localelev_ID string
 
@@ -36,9 +35,7 @@ func InitSynchElevators(drv_floors <-chan int){
 	}
 }
 
-
 /*----------------------Single elevator-----------------------------*/
-
 func getPeerID() string {
 	localIP, err := localip.LocalIP()
 	if err != nil {
@@ -61,13 +58,16 @@ func InitElevator() types.Elevator {
 
 	return elevator
 }
-
+/*------------------------------------------------------------------*/
+/*This is the only routine that should write to all_elevs*/
 func UpdateElevator(
-	/*FSM channels, single elevator*/
+	/*FSM channels, single elevator:*/
 	update_state <-chan types.ElevatorState, update_floor <-chan int, update_direction <-chan elevio.MotorDirection,
 	clear_floor <-chan int, floor_reached chan<- bool, order_added chan<- int,
-	/*---*/
-	add_order <-chan types.AssignedOrder, elev_rx <-chan types.Wrapped_Elevator){
+	/*Multiple elevator stuff:*/
+	/*elev_tx is only used in this func to send other elevs when requested bc of backup*/
+	add_order <-chan types.AssignedOrder, elev_rx <-chan types.Wrapped_Elevator, sendwrap_request <-chan string, elev_tx chan<- types.Wrapped_Elevator) {
+		
 		for {
     	select{
       case new_state:= <- update_state:
@@ -77,7 +77,7 @@ func UpdateElevator(
       case new_floor:= <- update_floor:
 				setFloor(new_floor, localelev_ID)
 				floor_reached <- true
-				fmt.Printf("\n elev floor set: %d\n", new_floor)
+				//fmt.Printf("\n elev floor set: %d\n", new_floor)
 
 			case new_dir:= <- update_direction:
 				setDir(new_dir, localelev_ID)
@@ -85,12 +85,14 @@ func UpdateElevator(
 				//types.PrintStates(all_elevs[localelev_ID])
 
 			case order:= <-add_order:
-				ord := types.Order{-1/*todo: ORDER-ID*/, types.OS_UnacceptedOrder}
-				setOrder(ord, order.Order.Floor, int(order.Order.Button), order.Elevator_ID)
+				//ord := types.Order{-1/*todo: ORDER-ID*/, types.OS_UnacceptedOrder}
+				setOrdered(order.Order.Floor, int(order.Order.Button), order.Elevator_ID)
 
 				if(order.Elevator_ID == localelev_ID){
-					order_added <- order.Order.Floor
-					fmt.Printf("\nAdded order fl. %d\n", order.Order.Floor)
+					order_added <- order.Order.Floor /*
+					TODO: viktig, dette signalet må flyttes til å gis når det har blitt lagt til noe i local
+					sin kø, nå ville den kun fått varsel når den selv har lagt til i sin kø, ikke når andre har lagt til*/
+					//fmt.Printf("\nAdded order fl. %d\n", order.Order.Floor)
 					lamps.SetAllLamps(all_elevs[localelev_ID]) //todo
 				}
 			case <- clear_floor:
@@ -98,56 +100,30 @@ func UpdateElevator(
 				lamps.SetAllLamps(all_elevs[localelev_ID])
 
 			case received := <- elev_rx:
-				fmt.Printf("\n\nID: %s\nDir: %s\nOrder1-cab: %s\n", received.Elevator_ID,
-					types.DirToString(received.Direction), types.OrderToString(received.Orders["hei1"][0][0]))
-				/*if(received.Elev_ID == all_elevs.Elev_ID){
+				//fmt.Printf("\n\nID: %s\n", received.Elevator_ID)
+				if(received.Elevator_ID == localelev_ID){
 					break
+				} 
+				if !keyExists(received.Elevator_ID) {
+
+					var newElev types.Elevator
+					newElev.Elevator_ID = received.Elevator_ID
+					all_elevs[received.Elevator_ID] = newElev
+					setOrderList(received.Orders[received.Elevator_ID] , received.Elevator_ID)
+					fmt.Printf("\nAdded new elevator!\n")
+
 				}
-				for key, val := range received.Elev_map {
-					//fmt.Println("Ding")
-					if !keyExists(key) {
-						all_elevs.Elev_map[key] = val
-						fmt.Printf("\nAdded new elev!\n")
-					} else {
-						//update states
-						if received.Elev_ID == key {//overwrite new states where elev = elev which sent
-							setFields(val.State, val.Floor, val.Direction, key)
-						}
-					}
-				}*/
-				//merge orders
-				//funksjon for det
-				//her, eller ett hakk ut?
+				//update states
+				setFields(received.State, received.Floor, received.Direction, received.Elevator_ID)
+				
+				//update orders: Uncomment next two lines when merge is ready
+				//order_map := modulename.mergeOrders(getOrderMap(all_elevs), received.Orders)
+				//setFromOrderMap(order_map)
+
+			case requestedID := <- sendwrap_request: //when an elev needs its backup
+				elev_tx <- wrapElevator(requestedID)
 			}
     }
-}
-
-func TestPrintAllElevators(){
-	for{
-		fmt.Printf("\n\n")
-		for key, _ := range all_elevs {
-			/*TEST:*/
-			fmt.Printf("\nElev: %s", key)
-			//types.PrintStates(val)
-		}
-		time.Sleep(time.Second*5)
-	}
-}
-
-//tar inn ID --> kan lett requeste og wrappe annen heis hvis det trengs
-func wrapElevator(elevator_ID string) types.Wrapped_Elevator {
-	temp := all_elevs[elevator_ID] // = the non-wrapped elev
-	var wrapped types.Wrapped_Elevator
-	wrapped.Elevator_ID = temp.Elevator_ID
-	wrapped.State = temp.State
-	wrapped.Floor = temp.Floor
-	wrapped.Direction = temp.Direction
-
-	//wrap orders
-	for key, val := range all_elevs {
-		wrapped.Orders[key] = val.Orders
-	}
-	return wrapped
 }
 
 func TransmitElev(elev_tx chan<- types.Wrapped_Elevator){
@@ -157,11 +133,51 @@ func TransmitElev(elev_tx chan<- types.Wrapped_Elevator){
 	}
 }
 
+func TestPrintAllElevators(){
+	for{
+		fmt.Printf("\n\n")
+		for key, val := range all_elevs {
+			/*TEST:*/
+			fmt.Printf("\nElev: %s", key)
+			types.PrintStates(val)
+		}
+		time.Sleep(time.Second*5)
+	}
+}
+
+func getOrderMap(elevator_map map[string]types.Elevator) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order {
+	order_map := make(map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order)
+	for key, val := range elevator_map {
+		order_map[key] = val.Orders
+	}
+	return order_map
+}
+
+func setFromOrderMap(order_map map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) {
+	for key, val := range order_map {
+		setOrderList(val, key)
+	}
+}
+
+/*By using ID we can easily use this function for wrapping any elevator*/
+func wrapElevator(elevator_ID string) types.Wrapped_Elevator {
+	var wrapped types.Wrapped_Elevator
+	if(keyExists(elevator_ID)){
+		temp := all_elevs[elevator_ID] // = the non-wrapped elev
+		wrapped.Elevator_ID = temp.Elevator_ID
+		wrapped.State = temp.State
+		wrapped.Floor = temp.Floor
+		wrapped.Direction = temp.Direction
+		wrapped.Orders = getOrderMap(all_elevs)
+	} else {
+		wrapped.Elevator_ID = "NOTFOUND" //should probably have used nil but don't know how
+	}
+	return wrapped
+}
 
 func ReadLocalElevator() types.Elevator {
 	return all_elevs[localelev_ID]
 }
-
 
 func keyExists(key string) bool {
 	_, exists := all_elevs[key]
@@ -202,10 +218,11 @@ func setDir(d elevio.MotorDirection, ID string){
 }
 
 
-func setOrder(order types.Order, floor int, button int, ID string){
+func setOrdered(floor int, button int, ID string){
 	temp, is := all_elevs[ID]
 	if(is){
-		temp.Orders[floor][button] = order
+		temp.Orders[floor][button].State = types.OS_UnacceptedOrder
+		//leave counter unchanged
 		all_elevs[ID] = temp
 	}
 }

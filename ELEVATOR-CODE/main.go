@@ -14,7 +14,7 @@ import (
 func main(){
 	//initialization
 	//15657, 59334, 46342, 33922, 50945, 36732
-	elevio.Init("localhost:33922", constants.N_FLOORS)
+	elevio.Init("localhost:46342", constants.N_FLOORS)
 	drv_buttons := make(chan elevio.ButtonEvent)
 	drv_floors  := make(chan int)
 	order_added := make(chan int) //for informing FSM about order update
@@ -32,14 +32,14 @@ func main(){
 
 	elev_rx := make(chan types.Wrapped_Elevator)
 	elev_tx := make(chan types.Wrapped_Elevator)
-
+	sendwrap_request := make(chan string)
 
 	go elevio.PollFloorSensor(drv_floors)
 	states.InitSynchElevators(drv_floors)
 
 	//run
 	go elevio.PollButtons(drv_buttons)
-	go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx)
+	go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx, sendwrap_request, elev_tx)
 	go fsm.FSM(floor_reached, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
 	go orderassigner.AssignOrder(drv_buttons, add_order)
 	go timer.DoorTimer(start_door_timer, door_timeout)
@@ -48,7 +48,7 @@ func main(){
 	go bcast.Transmitter(33922, elev_tx)
 	go bcast.Receiver(33922, elev_rx)
 
-	//go states.TestPrintAllElevators()
+	go states.TestPrintAllElevators()
 
 	//go peers.Receiver(noe, peerupdatech)
 	//go noe.Handlepeerupdates(peerupdatech)
