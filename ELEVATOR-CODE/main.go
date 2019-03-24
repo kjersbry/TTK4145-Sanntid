@@ -9,6 +9,7 @@ import (
 	"./timer"
 	"./constants"
 	"./bcast"
+	"operation" //This will probably be changed
 )
 
 func main(){
@@ -50,8 +51,11 @@ func main(){
 
 	go states.TestPrintAllElevators()
 
-	//go peers.Receiver(noe, peerupdatech)
-	//go noe.Handlepeerupdates(peerupdatech)
+	operation_Update := make(chan Operation_Event) //Update elevator must use this <- Remember to update
+	connection_Update := make(chan Connection_Event) //Update elevator must use this <- Remember to update
+	//Connections
+	go peers.ConnectionObserver(33922, update_connection)
+	go operations.OperationObserver(ReadAllElevs, operation_Update)
 
 
 	/*Infinite loop: */
