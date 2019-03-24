@@ -17,7 +17,7 @@ initElev burde også bruke channels mot elevator
 /*------------------------------ funcs for running FSM -----------------------------------------------------------------------------------*/
 //FSM trenger kun å oppdatere elevator via channels dersom det er fare for at den oppdateres fra et annet sted samtidig
 //kun ved init etter krasj tror jeg?
-func FSM(floor_reached <-chan bool, clear_floor chan<- int, order_added <-chan int, start_door_timer chan<- bool, door_timeout <-chan bool,
+func FSM(floor_reached <-chan bool, clear_floor chan<- int, order_added <-chan bool, start_door_timer chan<- bool, door_timeout <-chan bool,
 	update_state chan<- types.ElevatorState, update_floor chan<- int, update_direction chan<- elevio.MotorDirection /*, ...chans*/){
 	for{
 		select {
@@ -28,14 +28,14 @@ func FSM(floor_reached <-chan bool, clear_floor chan<- int, order_added <-chan i
 				update_state <- types.ES_DoorOpen
 			}
 
-		case floor := <- order_added:
-			state, dir, start_timer := onListUpdate(floor)
+		case <- order_added:
+			state, dir, start_timer := onListUpdate()
+			if(start_timer){
+				clear_floor <- states.ReadLocalElevator().Floor
+			}
 			update_state <- state
 			update_direction <- dir
 			start_door_timer <- start_timer
-			if(start_timer){
-				clear_floor <- floor
-			}
 
 		case <- door_timeout: //=> doors should be closed
 				state, dir := onDoorTimeout()
@@ -75,20 +75,17 @@ func onDoorTimeout() (types.ElevatorState, elevio.MotorDirection) {
 		elevio.SetDoorOpenLamp(false)
 		dir = orders.ChooseDirection(states.ReadLocalElevator())
 		elevio.SetMotorDirection(dir)
-		//fmt.Printf("dir: %s", types.DirToString(dir))
 
 		if(dir == elevio.MD_Stop){
-			//fmt.Printf("\n chosen dir was stop")
 			state = types.ES_Idle
 			} else {
 			state = types.ES_Moving
 		}
 	}
-	//fmt.Printf("\nonDoorTimeout end\n")
 	return state, dir
 }
 
-func onListUpdate(floor int) (types.ElevatorState, elevio.MotorDirection, bool) {
+func onListUpdate() (types.ElevatorState, elevio.MotorDirection, bool) {
 	//fmt.Printf("\nonListUpdate\n")
 
 	state := states.ReadLocalElevator().State
@@ -98,12 +95,14 @@ func onListUpdate(floor int) (types.ElevatorState, elevio.MotorDirection, bool) 
 
 	switch(state){
 	case types.ES_DoorOpen:
-		if(states.ReadLocalElevator().Floor == floor){
+		//if(states.ReadLocalElevator().Floor == floor){ previous version
+		if(orders.IsOrderCurrentFloor(states.ReadLocalElevator())){
 			start_timer = true
 		}
 
 	case types.ES_Idle:
-		if(states.ReadLocalElevator().Floor == floor){
+		//if(states.ReadLocalElevator().Floor == floor){
+		if(orders.IsOrderCurrentFloor(states.ReadLocalElevator())){
 			elevio.SetDoorOpenLamp(true)
 			start_timer = true
 			state = types.ES_DoorOpen

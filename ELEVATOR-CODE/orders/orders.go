@@ -19,17 +19,6 @@ func ClearAtCurrentFloor(e types.Elevator) [constants.N_FLOORS][constants.N_BUTT
 
     return e.Orders
 }
-/*
-func SetOrder(e types.Elevator, order elevio.ButtonEvent) [constants.N_FLOORS][constants.N_BUTTONS]types.Order {
-  if(order.Floor < 0 || order.Button > 3){
-    fmt.Printf("\nSet: out of range %d \n", e.Floor)
-    return e.Orders
-  } //todo:ta vekk! litt for quickfix
-
-    e.Orders[order.Floor][order.Button].State = types.OS_UnacceptedOrder
-
-    return e.Orders
-}*/
 
 func IsOrder(e types.Elevator, floor int, button elevio.ButtonType) bool {
     //todo: vurder denne. Når skal den si at det er bestilling (= når skal den stoppe), skal den stoppe på unaccepted også?
@@ -37,9 +26,24 @@ func IsOrder(e types.Elevator, floor int, button elevio.ButtonType) bool {
       fmt.Printf("\nIs: out of range %d \n", floor)
       return false
     } //todo: ta vekk! litt for quickfix
-
-
+    
     return (e.Orders[floor][button].State != types.OS_NoOrder)
+    /* --> : todo
+    if(button == elevio.BT_Cab){
+        return (e.Orders[floor][button].State != types.OS_NoOrder)
+    } else {
+        return (e.Orders[floor][button].State == types.OS_AcceptedOrder)
+    }
+    */
+}
+
+func IsOrderCurrentFloor(e types.Elevator) bool {
+    for i := 0; i < constants.N_BUTTONS; i++ {
+        if(IsOrder(e, e.Floor, elevio.ButtonType(i))){
+            return true
+        }
+    }
+    return false
 }
 
 func isOrderAbove(e types.Elevator) bool {
