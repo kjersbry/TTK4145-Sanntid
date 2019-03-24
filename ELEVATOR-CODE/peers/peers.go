@@ -1,23 +1,22 @@
 package peers
 
 import (
-	"../conn"
 	"fmt"
 	"net"
-	"sort"
 	"time"
+
+	"../conn"
 )
 
-type PeerUpdate struct {
-	Peers []string
-	New   string
-	Lost  []string
+type Connection_Event struct {
+	Elevator_ID string
+	Connected   bool
 }
 
 const interval = 15 * time.Millisecond
 const timeout = 50 * time.Millisecond
 
-func Transmitter(port int, id string, transmitEnable <-chan bool) {
+func ConnectionTransmitter(port int, id string, transmitEnable <-chan bool) {
 
 	conn := conn.DialBroadcastUDP(port)
 	addr, _ := net.ResolveUDPAddr("udp4", fmt.Sprintf("255.255.255.255:%d", port))
@@ -34,16 +33,17 @@ func Transmitter(port int, id string, transmitEnable <-chan bool) {
 	}
 }
 
-func Receiver(port int, peerUpdateCh chan<- PeerUpdate) {
+//Detects when an elevator has been disconncted or reconnected. Does this need a sleep in the loop?
+func ConnectionObserver(port int, connectionUpdate chan<- Connection_Event) {
 
 	var buf [1024]byte
-	var p PeerUpdate
+	var lostConnections []string
+	var update Connection_Event
 	lastSeen := make(map[string]time.Time)
 
 	conn := conn.DialBroadcastUDP(port)
 
 	for {
-		updated := false
 
 		conn.SetReadDeadline(time.Now().Add(interval))
 		n, _, _ := conn.ReadFrom(buf[0:])
@@ -51,37 +51,31 @@ func Receiver(port int, peerUpdateCh chan<- PeerUpdate) {
 		id := string(buf[:n])
 
 		// Adding new connection
-		p.New = ""
+
 		if id != "" {
 			if _, idExists := lastSeen[id]; !idExists {
-				p.New = id
-				updated = true
-			}
 
+				for i, ID := range lostConnections {
+					if ID == id {
+						update = Connection_Event{ID, true}
+						connectionUpdate <- update
+						lostConnections = append(lostConnections[:i], lostConnections[i+1:]...)
+					}
+				}
+			}
 			lastSeen[id] = time.Now()
 		}
 
-		// Removing dead connection
-		p.Lost = make([]string, 0)
-		for k, v := range lastSeen {
-			if time.Now().Sub(v) > timeout {
-				updated = true
-				p.Lost = append(p.Lost, k)
-				delete(lastSeen, k)
+		//Removing lost connection
+
+		for elevID, lastTime := range lastSeen {
+			if time.Now().Sub(lastTime) > timeout { //Where is timeout???
+				lostConnections = append(lostConnections, elevID)
+				delete(lastSeen, elevID)
+				update = Connection_Event{elevID, false}
+				connectionUpdate <- update
 			}
-		}
-
-		// Sending update
-		if updated {
-			p.Peers = make([]string, 0, len(lastSeen))
-
-			for k, _ := range lastSeen {
-				p.Peers = append(p.Peers, k)
-			}
-
-			sort.Strings(p.Peers)
-			sort.Strings(p.Lost)
-			peerUpdateCh <- p
 		}
 	}
+
 }
