@@ -122,6 +122,21 @@ func UpdateElevator(
 
 			case requestedID := <- sendwrap_request: //when an elev needs its backup
 				elev_tx <- wrapElevator(requestedID)
+			
+			case update:= <- connectionUpdate	//Untested case
+				if update.Connected {
+					all_elevs[update.Elevator_ID].Connected = true
+				} else {
+					all_elevs[update.Elevator_ID].Connected = false
+					orderReassigner(update.Elevator_ID, false)
+				}
+			case update:= <- operationUpdate	//Untested case
+				if update.isOperational {
+					all_elevs[update.Elevator_ID].isOperational = true
+				} else {
+					all_elevs[update.Elevator_ID].isOperational = false
+					orderReassigner(update.Elevator_ID, true)
+				}
 			}
     }
 }
@@ -232,5 +247,23 @@ func setOrderList(list [constants.N_FLOORS][constants.N_BUTTONS]types.Order, ID 
 	if(is){
 		temp.Orders = list
 		all_elevs[ID] = temp
+	}
+}
+
+//Untested function
+func orderReassigner (faultyElevID string, operationError bool) {
+	var e = all_elevs[faultyElevID]
+
+	for i := 0 , i < N_FLOORS, i++ {
+		for y := N_BUTTONS - 1, i++ {
+			if e.Orders[i][y].State = OS_AcceptedOrder {
+				all_elevs[localelev_ID].Orders[i][y].state = OS_AcceptedOrder
+			}
+		}
+	} 
+
+	if operationError {
+		var dummyOrder = e.Floor += FloorPlusDir(e)
+		all_elevs[faultyElevID].Orders[dummyOrder][0].State = OS_AcceptedOrder //Default: Set to hallUp, should this be changed?
 	}
 }
