@@ -65,40 +65,44 @@ func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.As
 /*
 
 //TimeToIdle gives an estimate of how much that time that will elapse before an elevator as handled all its requests.
-func timeToIdle(e Elevator) int {
-	duration := 0
+func timeToIdle(e Elevator) float64 {
 
-	switch e.State {
+	var duration float64
+	duration = 0
+
+	switch e.State { //The switch has been tested.
 	case ES_Idle:
-		e.Direction = orders.ChooseDirection(e.Floor, e.Direction)
-		if (e.Direction == MD_Stop) { 
+		e.Direction = ChooseDirection(e) //Put back orders.
+		if e.Direction == MD_Stop {
 			return duration
-			}
+		}
 		break
-			
-	case ES_DoorOpen: 
+
+	case ES_DoorOpen:
 		duration -= 3 / 2 //1. Find proper constant name (or use 3. sec) 2. Potential datatype problems?
 		break
-	
-	case ES_Moving:	
-		duration += 5 / 2 //Find a proper name for the constant 
-		e.Floor += e.Direction 
+
+	case ES_Moving:
+		duration += 5 / 2 //Find a proper name for the constant
+		e.Floor = UpcommigFloor(e)
 		break
 	}
-
 
 	//For loop and nested functionality remains untested
 	for {
-		if(ShouldStop(e)) {		
-			//Clear order
-			duration += 3 //Put in proper constant name
-			e.Direction = orders.ChooseDirection(e.Floor, e.Direction)
-			if(e.Direction == 0 /*MD_Stop*//*){
+		if ShouldStop(e) {
+			for button := 0; button < 3; button++ {
+				e.Orders[e.Floor][button].State = OS_NoOrder
+			}
+			duration += 3                    //Put in proper constant name
+			e.Direction = ChooseDirection(e) //put back orders.
+			if e.Direction == MD_Stop {
 				return duration
 			}
 		}
-		e.Floor += e.Direction
-		duration +=  5		//TravelTime //Insert the proper operator
-	}
 
-}*/
+		e.Floor = UpcommingFloor(e)
+
+		duration += 5 //TravelTime //Insert the proper operator
+	}
+}
