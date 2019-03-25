@@ -269,9 +269,9 @@ func orderReassigner (faultyElevID string, operationError bool) {
 }
 
 //Returns a slice of the working elevators UNTESTED
-func WorkingElevs() {
+func WorkingElevs(elevs map[string]types.Elevator) {
     var workingElevs []string
-    for k, v := range all_elevs {
+    for k, v := range elevs {
         if v.isOperational && v.Connected {
             workingElevs = append(workingElevs, v.Elevator_ID)
         }
