@@ -13,6 +13,7 @@ import (
 	"flag"
 	"fmt"
 	"time"
+	"runtime"
 )
 
 /*TODO: BUG:
@@ -20,7 +21,7 @@ den får en tom heis/heis uten ID, i tillegg til de andre heisene
 */
 
 /*Server port suggestions:
-15657, 59334, 46342, 33922, 50945, 36732 */
+15657, 59334, 46342, 33922, 50945, 36732, 37467 */
 const default_sport int = 15657
 const default_pport int = 1234
 
@@ -35,6 +36,8 @@ func main(){
 	flag.IntVar(&phoenix_port, "pport", default_pport, "port for phoenix")
 	flag.StringVar(&spawn_sim, "sim", "no", "set -sim=yes if you want to spawn simulator")
 	flag.Parse()
+
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	//assume that this is the backup process
 	phoenix.RunBackup(phoenix_port, server_port, runElevator)
@@ -88,7 +91,8 @@ func runElevator(local_ID string, server_port string){
 		go states.TransmitElev(elev_tx)
 		go bcast.Transmitter(33922, elev_tx)
 		go bcast.Receiver(33922, elev_rx)
-	
+		
+		
 		//go states.TestPrintAllElevators()
 	
 		//go peers.Receiver(noe, peerupdatech)
