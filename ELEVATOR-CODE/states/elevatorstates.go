@@ -269,7 +269,7 @@ func orderReassigner (faultyElevID string, operationError bool) {
 }
 
 //Returns a slice of the working elevators UNTESTED
-func workingElevs() {
+func WorkingElevs() {
     var workingElevs []string
     for k, v := range all_elevs {
         if v.isOperational && v.Connected {
