@@ -49,7 +49,7 @@ func UpdateElevator(
 	clear_floor <-chan int, floor_reached chan<- bool, order_added chan<- bool,
 	/*Multiple elevator stuff:*/
 	/*elev_tx is only used in this func to send other elevs when requested bc of backup*/
-	add_order <-chan types.AssignedOrder, elev_rx <-chan types.Wrapped_Elevator, sendwrap_request <-chan string, elev_tx chan<- types.Wrapped_Elevator) {
+	add_order <-chan types.AssignedOrder, elev_rx <-chan /*types.Elevator*/types.Wrapped_Elevator, sendwrap_request <-chan string, elev_tx chan<- /*types.Elevator*/types.Wrapped_Elevator) {
 		
 		for {
     	select{
@@ -76,29 +76,36 @@ func UpdateElevator(
 					/*TODO: viktig, dette signalet må i tillegg gis når det har blitt lagt til noe i local
 					sin kø fra merge, nå ville den kun fått varsel når den selv har lagt til i sin kø, ikke når andre har lagt til*/
 					//fmt.Printf("\nAdded order fl. %d\n", order.Order.Floor)
-					lamps.SetAllLamps(all_elevators[localelev_ID]) //todo
+					lamps.SetAllLamps(all_elevators[localelev_ID])
 				}
 			case <- clear_floor:
 				setOrderList(orders.ClearAtCurrentFloor(all_elevators[localelev_ID]), localelev_ID)
 				lamps.SetAllLamps(all_elevators[localelev_ID])
 
 			case received := <- elev_rx:
-				//fmt.Printf("\n\nID: %s\n", received.Elevator_ID)
-				if(received.Elevator_ID == localelev_ID || received.Elevator_ID == "NOTFOUND"){
+				//fmt.Printf("\n\nrec: ID: %s\n", received.Elevator_ID)
+			
+				if(received.Elevator_ID == localelev_ID){
 					break
 				} 
-				if !keyExists(received.Elevator_ID) {
-
-					var newElev types.Elevator
-					newElev.Elevator_ID = received.Elevator_ID
-					all_elevators[received.Elevator_ID] = newElev
-					setOrderList(received.Orders[received.Elevator_ID] , received.Elevator_ID)
-					fmt.Printf("\nAdded new elevator!\n")
-
+				if(received.Elevator_ID == "NOTFOUND" || !isValidID(received.Elevator_ID)){
+					//log/print: something weird has happened
+					break
 				}
-				//update states
-				setFields(received.State, received.Floor, received.Direction, received.Elevator_ID)
-				
+
+				if !keyExists(received.Elevator_ID) {
+					fmt.Printf("\n\nID: %s\n", received.Elevator_ID)
+					test := unwrapElevator(received)
+					types.PrintStates(test)
+					all_elevators[test.Elevator_ID] = test //unwrapElevator(received)
+					//fmt.Printf("\nAdded new elevator!\n")
+
+				} else {
+						//update states
+						//setFields(received.State, received.Floor, received.Direction, received.Elevator_ID)
+						//fmt.Printf("\n\nrec2: ID: %s\n", received.Elevator_ID)
+				}
+
 				//update orders: Uncomment next two lines when merge is ready
 				//order_map, is_new_local_order := modulename.mergeOrders(getOrderMap(all_elevators), received.Orders)
 				//setFromOrderMap(order_map)
@@ -106,13 +113,15 @@ func UpdateElevator(
 
 			case /*requestedID := */ <- sendwrap_request: //when an elev needs its backup
 				//elev_tx <- wrapElevator(requestedID)
+				//this is not needed anymore?
 			}
     }
 }
 
-func TransmitElev(elev_tx chan<- types.Wrapped_Elevator){
+func TransmitElev(elev_tx chan<- /*types.Elevator*/types.Wrapped_Elevator){
 	for {
 			elev_tx <- wrapElevator(localelev_ID)
+			//elev_tx <- all_elevators[localelev_ID]
 			time.Sleep(time.Millisecond*constants.TRANSMIT_MS)
 	}
 }
@@ -159,6 +168,16 @@ func wrapElevator(elevator_ID string) types.Wrapped_Elevator {
 	return wrapped
 }
 
+func unwrapElevator(wrapped types.Wrapped_Elevator) types.Elevator {
+	var unwrapped types.Elevator
+	unwrapped.Elevator_ID = wrapped.Elevator_ID
+	unwrapped.State = wrapped.State
+	unwrapped.Floor = wrapped.Floor
+	unwrapped.Direction = wrapped.Direction
+	unwrapped.Orders = wrapped.Orders[wrapped.Elevator_ID]
+	return unwrapped
+}
+
 func ReadLocalElevator() types.Elevator {
 	return all_elevators[localelev_ID]
 }
@@ -168,7 +187,20 @@ func keyExists(key string) bool {
 	return exists
 }
 
+func isValidID(ID string) bool {
+	//check substring stuff TODO
+	return true
+}
+
 //Workaround functions because go does not allow setting structs in maps directly
+func setID(ID string){
+	temp, is := all_elevators[ID]
+	if(is){
+		temp.Elevator_ID = ID
+		all_elevators[ID] = temp
+	}
+}
+
 func setFields(s types.ElevatorState, f int, d elevio.MotorDirection, ID string){
 	setState(s, ID)
 	setFloor(f, ID)

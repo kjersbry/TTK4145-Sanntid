@@ -69,6 +69,10 @@ func runElevator(local_ID string, server_port string){
 	
 		elev_rx := make(chan types.Wrapped_Elevator)
 		elev_tx := make(chan types.Wrapped_Elevator)
+		//elev_rx := make(chan types.Elevator)
+		//elev_tx := make(chan types.Elevator)
+		
+		
 		sendwrap_request := make(chan string)
 	
 		go elevio.PollFloorSensor(drv_floors)
@@ -85,7 +89,7 @@ func runElevator(local_ID string, server_port string){
 		go bcast.Transmitter(33922, elev_tx)
 		go bcast.Receiver(33922, elev_rx)
 	
-		go states.TestPrintAllElevators()
+		//go states.TestPrintAllElevators()
 	
 		//go peers.Receiver(noe, peerupdatech)
 		//go noe.Handlepeerupdates(peerupdatech)
