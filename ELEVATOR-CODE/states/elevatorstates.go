@@ -49,7 +49,7 @@ func UpdateElevator(
 	clear_floor <-chan int, floor_reached chan<- bool, order_added chan<- bool,
 	/*Multiple elevator stuff:*/
 	/*elev_tx is only used in this func to send other elevs when requested bc of backup*/
-	add_order <-chan types.AssignedOrder, elev_rx <-chan /*types.Elevator*/types.Wrapped_Elevator, sendwrap_request <-chan string, elev_tx chan<- /*types.Elevator*/types.Wrapped_Elevator) {
+	add_order <-chan types.AssignedOrder, elev_rx <-chan /*types.Elevator*/types.Wrapped_Elevator, sendwrap_request <-chan string) {
 		
 		for {
     	select{
@@ -94,15 +94,15 @@ func UpdateElevator(
 				}
 
 				if !keyExists(received.Elevator_ID) {
-					fmt.Printf("\n\nID: %s\n", received.Elevator_ID)
+					//fmt.Printf("\n\nID: %s\n", received.Elevator_ID)
 					test := unwrapElevator(received)
 					types.PrintStates(test)
 					all_elevators[test.Elevator_ID] = test //unwrapElevator(received)
-					//fmt.Printf("\nAdded new elevator!\n")
+					fmt.Printf("\nAdded new elevator!\n")
 
 				} else {
 						//update states
-						//setFields(received.State, received.Floor, received.Direction, received.Elevator_ID)
+						setFields(received.State, received.Floor, received.Direction, received.Elevator_ID)
 						//fmt.Printf("\n\nrec2: ID: %s\n", received.Elevator_ID)
 				}
 
@@ -110,10 +110,6 @@ func UpdateElevator(
 				//order_map, is_new_local_order := modulename.mergeOrders(getOrderMap(all_elevators), received.Orders)
 				//setFromOrderMap(order_map)
 				//if(is_new_local_order){ order_added <- true } 
-
-			case /*requestedID := */ <- sendwrap_request: //when an elev needs its backup
-				//elev_tx <- wrapElevator(requestedID)
-				//this is not needed anymore?
 			}
     }
 }

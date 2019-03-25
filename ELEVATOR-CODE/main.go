@@ -16,8 +16,8 @@ import (
 	"runtime"
 )
 
-/*TODO: BUG:
-den får en tom heis/heis uten ID, i tillegg til de andre heisene
+/* TODO: sjekk om det er flere defaults på for{select{}} (men ikke fjern der det er select uten for)
+
 */
 
 /*Server port suggestions:
@@ -72,8 +72,6 @@ func runElevator(local_ID string, server_port string){
 	
 		elev_rx := make(chan types.Wrapped_Elevator)
 		elev_tx := make(chan types.Wrapped_Elevator)
-		//elev_rx := make(chan types.Elevator)
-		//elev_tx := make(chan types.Elevator)
 		
 		
 		sendwrap_request := make(chan string)
@@ -83,7 +81,7 @@ func runElevator(local_ID string, server_port string){
 
 		//run
 		go elevio.PollButtons(drv_buttons)
-		go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx, sendwrap_request, elev_tx)
+		go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx, sendwrap_request)
 		go fsm.FSM(floor_reached, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
 		go orderassigner.AssignOrder(drv_buttons, add_order)
 		go timer.DoorTimer(start_door_timer, door_timeout)
@@ -93,7 +91,7 @@ func runElevator(local_ID string, server_port string){
 		go bcast.Receiver(33922, elev_rx)
 		
 		
-		//go states.TestPrintAllElevators()
+		go states.TestPrintAllElevators()
 	
 		//go peers.Receiver(noe, peerupdatech)
 		//go noe.Handlepeerupdates(peerupdatech)

@@ -8,7 +8,7 @@ import (
 func DoorTimer(start <-chan bool, door_timeout chan<- bool){
 	is_active := false
 	timestamp:= time.Now()
-	//var tick time.Ticker
+	tick := time.NewTicker(time.Millisecond*7)
 	for{
 		select{
 		case should_start :=<- start:
@@ -16,17 +16,11 @@ func DoorTimer(start <-chan bool, door_timeout chan<- bool){
 				timestamp = time.Now()
 				is_active = true
 			}
-		default:
-			if (time.Now().Sub(timestamp) > time.Second*constants.DOOR_OPEN_SEC) && is_active {
+		case <- tick.C:
+			if is_active && (time.Now().Sub(timestamp) > time.Second*constants.DOOR_OPEN_SEC)  {
 				door_timeout <- true
 				is_active = false
 			}
-			/*tick:= time.NewTicker(time.Millisecond*7)
-		case <- tick.C:
-			if (time.Now().Sub(timestamp) > time.Second*constants.DOOR_OPEN_SEC) && is_active {
-				door_timeout <- true
-				is_active = false
-			}*/
 		}
 	}
 }
