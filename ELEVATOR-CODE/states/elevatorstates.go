@@ -267,3 +267,13 @@ func orderReassigner (faultyElevID string, operationError bool) {
 		all_elevs[faultyElevID].Orders[dummyOrder][0].State = OS_AcceptedOrder //Default: Set to hallUp, should this be changed?
 	}
 }
+
+//Returns a slice of the working elevators UNTESTED
+func workingElevs() {
+    var workingElevs []string
+    for k, v := range all_elevs {
+        if v.isOperational && v.Connected {
+            workingElevs = append(workingElevs, v.Elevator_ID)
+        }
+    }
+}
