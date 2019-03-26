@@ -115,3 +115,13 @@ func onListUpdate() (types.ElevatorState, elevio.MotorDirection, bool) {
 	}
 	return state, dir, start_timer
 }
+
+//Returns the next floor to be reached. Note: This isn't used by FSM. I don't know where this should be put.
+//TODO: Move
+func UpcommingFloor (e Elevator) int{
+	if e.Direction == MD_Up {
+		return e.Floor + 1
+	} else {
+		return e.Floor - 1
+	}
+}

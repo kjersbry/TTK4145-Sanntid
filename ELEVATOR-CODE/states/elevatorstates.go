@@ -49,7 +49,7 @@ func UpdateElevator(
 	clear_floor <-chan int, floor_reached chan<- bool, order_added chan<- bool,
 	/*Multiple elevator stuff:*/
 	/*elev_tx is only used in this func to send other elevs when requested bc of backup*/
-	add_order <-chan types.AssignedOrder, elev_rx <-chan /*types.Elevator*/types.Wrapped_Elevator, sendwrap_request <-chan string) {
+	add_order <-chan types.AssignedOrder, elev_rx <-chan types.Wrapped_Elevator, connectionUpdate <-chan types.Connection_Event, operationUpdate <-chan types.Operation_Event) {
 		
 		for {
     	select{
@@ -110,11 +110,26 @@ func UpdateElevator(
 				//order_map, is_new_local_order := modulename.mergeOrders(getOrderMap(all_elevators), received.Orders)
 				//setFromOrderMap(order_map)
 				//if(is_new_local_order){ order_added <- true } 
+
+			case update:= <- connectionUpdate:	//Untested case
+				if update.Connected {
+					all_elevators[update.Elevator_ID].Connected = true
+				} else {
+					all_elevators[update.Elevator_ID].Connected = false
+					orderReassigner(update.Elevator_ID, false)
+				}
+			case update:= <- operationUpdate:	//Untested case
+				if update.Is_Operational {
+					all_elevators[update.Elevator_ID].Is_Operational = true
+				} else {
+					all_elevators[update.Elevator_ID].Is_Operational = false
+					orderReassigner(update.Elevator_ID, true)
+				}
 			}
     }
 }
 
-func TransmitElev(elev_tx chan<- /*types.Elevator*/types.Wrapped_Elevator){
+func TransmitElev(elev_tx chan<- types.Wrapped_Elevator){
 	for {
 			elev_tx <- wrapElevator(localelev_ID)
 			//elev_tx <- all_elevators[localelev_ID]
@@ -229,6 +244,24 @@ func setDir(d elevio.MotorDirection, ID string){
 	}
 }
 
+/*
+
+func setOperational(val bool, ID string){
+	temp, is := all_elevators[ID]
+	if(is){
+		temp.Direction = d
+		all_elevators[ID] = temp
+	}
+}
+
+func setConnected(val bool, ID string){
+	temp, is := all_elevators[ID]
+	if(is){
+		temp.Direction = d
+		all_elevators[ID] = temp
+	}
+}
+*/
 
 func setOrdered(floor int, button int, ID string){
 	temp, is := all_elevators[ID]
@@ -245,4 +278,33 @@ func setOrderList(list [constants.N_FLOORS][constants.N_BUTTONS]types.Order, ID 
 		temp.Orders = list
 		all_elevators[ID] = temp
 	}
+}
+
+//Untested function
+//TODO: Move
+func orderReassigner (faultyElevID string, operationError bool) {
+	var e = all_elevators[faultyElevID]
+
+	for i := 0; i < constants.N_FLOORS; i++ {
+		for j := 0; j < constants.N_BUTTONS - 1; j++ {
+			if e.Orders[i][j].State == types.OS_AcceptedOrder {
+				all_elevators[localelev_ID].Orders[i][j].State = types.OS_AcceptedOrder
+			}
+		}
+	} 
+
+	if operationError {
+		var dummyOrder = FloorPlusDir(e)
+		all_elevators[faultyElevID].Orders[dummyOrder][0].State = types.OS_AcceptedOrder //Default: Set to hallUp, should this be changed?
+	}
+}
+
+//Returns a slice of the working elevators UNTESTED
+func WorkingElevs( /*elevs map[string]types.Elevator  <- upgrade*/) {
+    var workingElevs []string
+    for k, v := range all_elevators { //change to elevs when you move variables
+        if v.Is_Operational && v.Connected {
+            workingElevs = append(workingElevs, v.Elevator_ID)
+        }
+    }
 }

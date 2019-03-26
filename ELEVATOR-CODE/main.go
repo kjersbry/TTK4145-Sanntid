@@ -10,6 +10,8 @@ import (
 	"./timer"
 	"./constants"
 	"./bcast"
+	"./operation" //This will probably be changed
+	"./peers"
 	"flag"
 	"fmt"
 	"time"
@@ -75,23 +77,24 @@ func runElevator(local_ID string, server_port string){
 		go elevio.PollFloorSensor(drv_floors)
 		states.InitElevators(local_ID, drv_floors)
 
+		//Connections
+		operation_update := make(chan types.Operation_Event) //Update elevator must use this <- Remember to update
+		connection_update := make(chan types.Connection_Event) //Update elevator must use this <- Remember to update
+		go peers.ConnectionObserver(33922, connection_update)
+		go peers.ConnectionTransmitter(33922, local_ID)
+		go operations.OperationObserver(ReadAllElevs, operation_update)
+		go bcast.Transmitter(33922, elev_tx)
+		go bcast.Receiver(33922, elev_rx)
+
 		//run
 		go elevio.PollButtons(drv_buttons)
-		go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx, sendwrap_request)
+		go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx, connection_update, operation_update)
 		go fsm.FSM(floor_reached, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction/*, chans.....*/)
 		go orderassigner.AssignOrder(drv_buttons, add_order)
 		go timer.DoorTimer(start_door_timer, door_timeout)
-	
 		go states.TransmitElev(elev_tx)
-		go bcast.Transmitter(33922, elev_tx)
-		go bcast.Receiver(33922, elev_rx)
-		
-		
+
 		go states.TestPrintAllElevators()
-	
-		//go peers.Receiver(noe, peerupdatech)
-		//go noe.Handlepeerupdates(peerupdatech)
-	
 	
 		/*Infinite loop: */
 		fin := make(chan int)

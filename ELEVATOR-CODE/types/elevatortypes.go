@@ -39,8 +39,9 @@ type Elevator struct {
     State ElevatorState
     Floor int
     Direction elevio.MotorDirection   //does only change to stop when IDLE, not when stopping for order
+    Is_Operational bool
+    Connected bool//todo --> is
     Orders [constants.N_FLOORS][constants.N_BUTTONS]Order
-    //Is_Operational bool
 }
 
 type Wrapped_Elevator struct {
@@ -52,6 +53,15 @@ type Wrapped_Elevator struct {
     //Is_Operational bool
 }
 
+type Operation_Event struct {
+	Elevator_ID string
+	isOperational   bool
+}
+
+type Connection_Event struct {
+	Elevator_ID string
+	Connected   bool
+}
 
 /*The below functions are used for debugging*/
 
