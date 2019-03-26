@@ -9,3 +9,4 @@ const N_ELEVATORS int = 3
 
 const DOOR_OPEN_SEC = 3
 const TRANSMIT_MS = 1000 //todo endre til raskere
+const ELEVATOR_TIMEOUT = 15

@@ -26,6 +26,8 @@ func InitElevators(local_ID string, drv_floors <-chan int) {
 	var ord [constants.N_FLOORS][constants.N_BUTTONS](types.Order)
 	setFields(types.ES_Idle, -1, elevio.MD_Stop, localelev_ID)
 	setOrderList(ord, localelev_ID)
+	//setOperational()
+	//setConnected() todo???
 
 	//wait to allow floor signal to arrive if we start on a floor
 	time.Sleep(time.Millisecond * 50)
@@ -52,7 +54,7 @@ func UpdateElevator(
 	clear_floor <-chan int, floor_reached chan<- bool, order_added chan<- bool,
 	/*Multiple elevator stuff:*/
 	/*elev_tx is only used in this func to send other elevs when requested bc of backup*/
-	add_order <-chan types.AssignedOrder, elev_rx <-chan types.Wrapped_Elevator, connectionUpdate <-chan types.Connection_Event, operationUpdate <-chan types.Operation_Event) {
+	add_order <-chan types.AssignedOrder, elev_rx <-chan types.Wrapped_Elevator, connectionUpdate <-chan types.Connection_Event/*, operationUpdate <-chan types.Operation_Event*/) {
 
 	for {
 		select {
@@ -72,7 +74,7 @@ func UpdateElevator(
 
 		case order := <-add_order:
 			//ord := types.Order{-1/*todo: ORDER-ID*/, types.OS_UnacceptedOrder}
-			setOrdered(order.Order.Floor, int(order.Order.Button), order.Elevator_ID, true)
+			setOrdered(order.Order.Floor, int(order.Order.Button), order.Elevator_ID, false)
 
 			if order.Elevator_ID == localelev_ID {
 				order_added <- true
@@ -101,6 +103,13 @@ func UpdateElevator(
 				test := unwrapElevator(received)
 				types.PrintStates(test)
 				all_elevators[test.Elevator_ID] = test //unwrapElevator(received)
+
+				setOperational(true, received.Elevator_ID)
+				setConnected(true, received.Elevator_ID)
+
+				//Test
+				types.PrintOrders(all_elevators[test.Elevator_ID])
+
 				fmt.Printf("\nAdded new elevator!\n")
 
 			} else {
@@ -117,17 +126,29 @@ func UpdateElevator(
 		case update := <-connectionUpdate: //Untested case
 			if update.Connected {
 				setConnected(true, update.Elevator_ID)
+				fmt.Printf("The elevator is reconnected: %v\n", all_elevators[update.Elevator_ID].Connected)
 			} else {
 				setConnected(false, update.Elevator_ID)
+				fmt.Printf("\n%v has been disconnected\n", update.Elevator_ID)
 				orderReassigner(update.Elevator_ID, false)
+				order_added <- true
+				lamps.SetAllLamps(all_elevators[localelev_ID])
+
+				//test
+				fmt.Printf("\nThe elevator is connected: %v\n", all_elevators[update.Elevator_ID].Connected)
+				types.PrintOrders(all_elevators[localelev_ID])
 			}
-		case update := <-operationUpdate: //Untested case
+			//TestPeersPrint()
+		/*case update := <-operationUpdate: //Untested case
 			if update.Is_Operational {
 				setOperational(true, update.Elevator_ID)
 			} else {
+				fmt.Printf("\nThis was true\n")
 				setOperational(false, update.Elevator_ID)
 				orderReassigner(update.Elevator_ID, true)
-			}
+				order_added <- true
+				lamps.SetAllLamps(all_elevators[localelev_ID])
+			}*/
 		}
 	}
 }
@@ -144,10 +165,24 @@ func TestPrintAllElevators() {
 	for {
 		fmt.Printf("\n\n")
 		for key, val := range all_elevators {
-			/*TEST:*/
-			fmt.Printf("\nElev: %s", key)
+			fmt.Printf("\nElev: %s\n", key)
 			types.PrintStates(val)
 		}
+		time.Sleep(time.Second * 5)
+	}
+}
+
+func TestPeersPrint() {
+	for {	
+		//for key, val := range all_elevators {
+			fmt.Printf("\nElev: %s\n", localelev_ID)
+			/*if(val.Connected){
+				fmt.Printf("Is connected")
+			} else {
+				fmt.Printf("Not connected")
+			}*/
+			types.PrintOrders(all_elevators[localelev_ID])
+		//}
 		time.Sleep(time.Second * 5)
 	}
 }
@@ -194,6 +229,10 @@ func unwrapElevator(wrapped types.Wrapped_Elevator) types.Elevator {
 
 func ReadLocalElevator() types.Elevator {
 	return all_elevators[localelev_ID]
+}
+
+func ReadAllElevators() map[string]types.Elevator {
+	return all_elevators
 }
 
 func keyExists(key string) bool {
@@ -263,14 +302,15 @@ func setConnected(val bool, ID string) {
 	}
 }
 
-func setOrdered(floor int, button int, ID string, val bool) {
+func setOrdered(floor int, button int, ID string, accepted bool) {
 	temp, is := all_elevators[ID]
 	if is {
-		if val {
-			temp.Orders[floor][button].State = types.OS_UnacceptedOrder
-		} else {
+		if accepted {
 			temp.Orders[floor][button].State = types.OS_AcceptedOrder
+		} else {
+			temp.Orders[floor][button].State = types.OS_UnacceptedOrder
 		}
+
 		//leave counter unchanged
 		all_elevators[ID] = temp
 	}
@@ -288,22 +328,40 @@ func setOrderList(list [constants.N_FLOORS][constants.N_BUTTONS]types.Order, ID 
 //TODO: Move
 func orderReassigner(faultyElevID string, operationError bool) {
 	var e = all_elevators[faultyElevID]
-
+	fmt.Printf("\norderReassigner started\n")
 	for i := 0; i < constants.N_FLOORS; i++ {
+		/*if i == 0 {   //Remove this after test
+			fmt.Printf("\nOuter For loop started\n")
+		} else if i == constants.N_FLOORS - 1 {
+			fmt.Printf("\nOuter For loop ended\n")
+		}*/
 		for j := 0; j < constants.N_BUTTONS-1; j++ {
+			/*if j == 0 {   //Remove this after test
+				fmt.Printf("\nInner For loop started\n")
+			} else if j == constants.N_BUTTONS - 2 {
+				fmt.Printf("\nInner For loop ended\n")
+			}*/
 			if e.Orders[i][j].State == types.OS_AcceptedOrder {
-				setOrdered(i, j, localelev_ID, false)
+				fmt.Printf("\nsetOrdered will run\n")
+				setOrdered(i, j, localelev_ID, true)
+				
 			}
 		}
 	}
 
 	if operationError {
-		var dummyOrder = UpcommingFloor(e)
-		setOrdered(dummyOrder, 0, faultyElevID, false)
+		if e.Floor == constants.N_FLOORS && e.Direction == elevio.MD_Up {
+			setOrdered(constants.N_FLOORS - 1, elevio.BT_Cab , faultyElevID, true) //Todo use cab cal
+		} else if e.Floor == 0 && e.Direction == elevio.MD_Down {
+			setOrdered(1, elevio.BT_Cab, faultyElevID, true) //Todo use cab cal
+		} else {
+			var dummyOrder = UpcomingFloor(e)
+			setOrdered(dummyOrder, elevio.BT_Cab, faultyElevID, true) //Todo use cab cal
+		}
 	}
 }
 
-func UpcommingFloor(e types.Elevator) int {
+func UpcomingFloor(e types.Elevator) int {
 	if e.Direction == elevio.MD_Up {
 		return e.Floor + 1
 	} else {
@@ -320,3 +378,4 @@ func WorkingElevs( /*elevs map[string]types.Elevator  <- upgrade*/ ) {
 		}
 	}
 }
+

@@ -4,6 +4,7 @@ import (
 	"../elevio"
 	"../states"
 	"../types"
+	"../orders"
 )
 
 //Kjersti's
@@ -62,7 +63,7 @@ func timeToIdle(e types.Elevator) float64 {
 
 	switch e.State { //The switch has been tested.
 	case types.ES_Idle:
-		e.Direction = ChooseDirection(e) //Put back orders.
+		e.Direction = orders.ChooseDirection(e) //Put back orders.
 		if e.Direction == elevio.MD_Stop {
 			return duration
 		}
@@ -74,24 +75,24 @@ func timeToIdle(e types.Elevator) float64 {
 
 	case types.ES_Moving:
 		duration += 5 / 2 //Find a proper name for the constant
-		e.Floor = UpcommingFloor(e)
+		e.Floor = states.UpcomingFloor(e)
 		break
 	}
 
 	//For loop and nested functionality remains untested
 	for {
-		if ShouldStop(e) {
+		if orders.ShouldStop(e) {
 			for button := 0; button < 3; button++ {
 				e.Orders[e.Floor][button].State = types.OS_NoOrder
 			}
 			duration += 3                    //Put in proper constant name
-			e.Direction = ChooseDirection(e) //put back orders.
+			e.Direction = orders.ChooseDirection(e) //put back orders.
 			if e.Direction == elevio.MD_Stop {
 				return duration
 			}
 		}
 
-		e.Floor = UpcommingFloor(e)
+		e.Floor = states.UpcomingFloor(e)
 
 		duration += 5 //TravelTime //Insert the proper operator
 	}

@@ -26,7 +26,10 @@ func ConnectionTransmitter(port int, id string) {
 }
 
 //Detects when an elevator has been disconncted or reconnected. Does this need a sleep in the loop?
-func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event) {
+func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event, localID string) {
+
+	//Todo if time: Check if the dissconncted elevator is reconnected instantly. If so, don't reassign.
+
 
 	var buf [1024]byte
 	var lostConnections []string
@@ -44,7 +47,8 @@ func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event
 
 		// Adding new connection
 
-		if id != "" {
+		if (id != "") && (id != localID) {
+			//fmt.Printf("\nI got here id: %v \n", id)
 			if _, idExists := lastSeen[id]; !idExists {
 
 				for i, ID := range lostConnections {
@@ -52,20 +56,23 @@ func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event
 						update = types.Connection_Event{ID, true}
 						connectionUpdate <- update
 						lostConnections = append(lostConnections[:i], lostConnections[i+1:]...)
+						fmt.Printf("\nLost connection restored \n")
 					}
 				}
 			}
+
 			lastSeen[id] = time.Now()
 		}
 
 		//Removing lost connection
-
 		for elevID, lastTime := range lastSeen {
-			if time.Now().Sub(lastTime) > timeout { //Where is timeout???
+			if time.Now().Sub(lastTime) > timeout {
+				fmt.Printf("\nLost connection \n")
 				lostConnections = append(lostConnections, elevID)
 				delete(lastSeen, elevID)
 				update = types.Connection_Event{elevID, false}
 				connectionUpdate <- update
+				fmt.Printf("\nLost: %v \n", id)
 			}
 		}
 	}

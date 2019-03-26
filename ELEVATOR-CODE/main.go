@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"runtime"
 	"time"
 
 	"./bcast" //This will probably be changed
@@ -16,6 +15,7 @@ import (
 	"./states"
 	"./timer"
 	"./types"
+	//"./operation"
 )
 
 /* TODO: sjekk om det er flere defaults på for{select{}} (men ikke fjern der det er select uten for)*/
@@ -34,8 +34,6 @@ func main() {
 	flag.IntVar(&phoenix_port, "pport", default_pport, "port for phoenix")
 	flag.StringVar(&spawn_sim, "sim", "no", "set -sim=yes if you want to spawn simulator")
 	flag.Parse()
-
-	//runtime.GOMAXPROCS(runtime.NumCPU())
 
 	//assume that this is the backup process
 	phoenix.RunBackup(phoenix_port, server_port, runElevator)
@@ -70,29 +68,29 @@ func runElevator(local_ID string, server_port string) {
 	elev_rx := make(chan types.Wrapped_Elevator)
 	elev_tx := make(chan types.Wrapped_Elevator)
 
-	sendwrap_request := make(chan string)
-
 	go elevio.PollFloorSensor(drv_floors)
 	states.InitElevators(local_ID, drv_floors)
 
 	//Connections
-	operation_update := make(chan types.Operation_Event)   //Update elevator must use this <- Remember to update
+	//operation_update := make(chan types.Operation_Event)   //Update elevator must use this <- Remember to update
 	connection_update := make(chan types.Connection_Event) //Update elevator must use this <- Remember to update
-	go peers.ConnectionObserver(33922, connection_update)
-	go peers.ConnectionTransmitter(33922, local_ID)
-	go operations.OperationObserver(ReadAllElevs, operation_update, local_ID)
+	go peers.ConnectionObserver(33924, connection_update, local_ID)
+	go peers.ConnectionTransmitter(33924, local_ID)
+	//go operation.OperationObserver(operation_update, local_ID)
 	go bcast.Transmitter(33922, elev_tx)
 	go bcast.Receiver(33922, elev_rx)
 
 	//run
 	go elevio.PollButtons(drv_buttons)
-	go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx, connection_update, operation_update)
-	go fsm.FSM(floor_reached, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction /*, chans.....*/)
+	go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx, connection_update/*, operation_update*/)
+	go fsm.FSM(floor_reached, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction)
 	go orderassigner.AssignOrder(drv_buttons, add_order)
 	go timer.DoorTimer(start_door_timer, door_timeout)
 	go states.TransmitElev(elev_tx)
 
-	go states.TestPrintAllElevators()
+	//go states.TestPeersPrint()  Put back in soon
+
+	//go states.TestPrintAllElevators()
 
 	/*Infinite loop: */
 	fin := make(chan int)
