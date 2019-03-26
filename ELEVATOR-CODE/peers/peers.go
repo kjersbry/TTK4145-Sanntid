@@ -6,9 +6,8 @@ import (
 	"time"
 
 	"../conn"
+	"../types"
 )
-
-
 
 const interval = 15 * time.Millisecond
 const timeout = 50 * time.Millisecond
@@ -27,11 +26,11 @@ func ConnectionTransmitter(port int, id string) {
 }
 
 //Detects when an elevator has been disconncted or reconnected. Does this need a sleep in the loop?
-func ConnectionObserver(port int, connectionUpdate chan<- Connection_Event) {
+func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event) {
 
 	var buf [1024]byte
 	var lostConnections []string
-	var update Connection_Event
+	var update types.Connection_Event
 	lastSeen := make(map[string]time.Time)
 
 	conn := conn.DialBroadcastUDP(port)
@@ -50,7 +49,7 @@ func ConnectionObserver(port int, connectionUpdate chan<- Connection_Event) {
 
 				for i, ID := range lostConnections {
 					if ID == id {
-						update = Connection_Event{ID, true}
+						update = types.Connection_Event{ID, true}
 						connectionUpdate <- update
 						lostConnections = append(lostConnections[:i], lostConnections[i+1:]...)
 					}
@@ -65,7 +64,7 @@ func ConnectionObserver(port int, connectionUpdate chan<- Connection_Event) {
 			if time.Now().Sub(lastTime) > timeout { //Where is timeout???
 				lostConnections = append(lostConnections, elevID)
 				delete(lastSeen, elevID)
-				update = Connection_Event{elevID, false}
+				update = types.Connection_Event{elevID, false}
 				connectionUpdate <- update
 			}
 		}
