@@ -16,12 +16,8 @@ import (
 	"runtime"
 )
 
-/* TODO: sjekk om det er flere defaults på for{select{}} (men ikke fjern der det er select uten for)
+/* TODO: sjekk om det er flere defaults på for{select{}} (men ikke fjern der det er select uten for)*/
 
-*/
-
-/*Server port suggestions:
-15657, 59334, 46342, 33922, 50945, 36732, 37467 */
 const default_sport int = 15657
 const default_pport int = 1234
 
