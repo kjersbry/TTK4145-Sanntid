@@ -2,6 +2,25 @@
 
 package conn
 
+import (
+	"net"
+	"os"
+	"syscall"
+)
+
+func DialBroadcastUDP(port int) net.PacketConn {
+	s, _ := syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, syscall.IPPROTO_UDP)
+	syscall.SetsockoptInt(s, syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
+	syscall.SetsockoptInt(s, syscall.SOL_SOCKET, syscall.SO_BROADCAST, 1)
+	syscall.Bind(s, &syscall.SockaddrInet4{Port: port})
+
+	f := os.NewFile(uintptr(s), "")
+	conn, _ := net.FilePacketConn(f)
+	f.Close()
+
+	return conn
+}
+
 // Windows socket error codes can be found here
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms740668(v=vs.85).aspx
 
@@ -9,13 +28,13 @@ package conn
 Adventures in creating a broadcast socket for Go on Windows:
 
 Alternative 1: The correct way that should work
-To create a broadcast socket, you must first create a socket, then set the BROADCAST and REUSEADDR options, then call bind. 
-However, the net.Dial/.Listen functions don't let you insert the calls to setsockopt between making the socket and binding 
+To create a broadcast socket, you must first create a socket, then set the BROADCAST and REUSEADDR options, then call bind.
+However, the net.Dial/.Listen functions don't let you insert the calls to setsockopt between making the socket and binding
 it, because reasons.
 
 Alternative 2: Syscalls
-Instead of using the net package, we use syscall and just do it the proper way, and turn the file descriptor / handle into a 
-"file connection". This works fine (as in "it works", not "it's fine" - because it is stupid) on posix, but does not work on 
+Instead of using the net package, we use syscall and just do it the proper way, and turn the file descriptor / handle into a
+"file connection". This works fine (as in "it works", not "it's fine" - because it is stupid) on posix, but does not work on
 Windows because reasons, where "reasons" are *it literally just says TODO in the standard library*:
 https://github.com/golang/go/blob/dfb0e4f6c744eb9bf629658bf7da313b2d1518e1/src/net/file_windows.go
 
@@ -29,11 +48,9 @@ Alternative 4: WSASockets from the Windows API
 WSA Sockets are like normal sockets, but with more options and more parameters. I was not able to make them work though...
 
 Alternative 5: Just write C code
-This is what is done below. All the socket code is written in C, and called from Go by using CGO, which therefore requires 
+This is what is done below. All the socket code is written in C, and called from Go by using CGO, which therefore requires
 a C compiler.
 */
-
-
 
 /*
 #include<stdio.h>
@@ -106,6 +123,8 @@ int cSetWriteDeadline(SOCKET s, int timeout_ms){
 
  #cgo LDFLAGS: -lws2_32
 */
+/*
+
 import "C"
 import (
 	"errors"
@@ -197,3 +216,5 @@ func (f WindowsBroadcastConn) SetWriteDeadline(t time.Time) error {
 func DialBroadcastUDP(port int) net.PacketConn {
 	return WindowsBroadcastConn{C.cBcastSocket(C.u_short(port))}
 }
+
+*/
