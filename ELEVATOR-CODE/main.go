@@ -35,7 +35,7 @@ func main(){
 	flag.StringVar(&spawn_sim, "sim", "no", "set -sim=yes if you want to spawn simulator")
 	flag.Parse()
 
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	//runtime.GOMAXPROCS(runtime.NumCPU())
 
 	//assume that this is the backup process
 	phoenix.RunBackup(phoenix_port, server_port, runElevator)
