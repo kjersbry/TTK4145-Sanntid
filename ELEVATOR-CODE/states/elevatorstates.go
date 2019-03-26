@@ -162,6 +162,9 @@ func ReadLocalElevator() types.Elevator {
 	return all_elevs[localelev_ID]
 }
 
+func ReadLocalID() string {
+	return localelev_ID
+}
 
 func keyExists(key string) bool {
 	_, exists := all_elevs[key]
