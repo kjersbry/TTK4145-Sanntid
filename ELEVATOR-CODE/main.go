@@ -84,7 +84,7 @@ func runElevator(local_ID string, server_port string) {
 	go elevio.PollButtons(drv_buttons)
 	go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx, connection_update/*, operation_update*/)
 	go fsm.FSM(floor_reached, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction)
-	go orderassigner.AssignOrder(drv_buttons, add_order)
+	go orderassigner.AssignOrder(drv_buttons, add_order, local_ID)
 	go timer.DoorTimer(start_door_timer, door_timeout)
 	go states.TransmitElev(elev_tx)
 

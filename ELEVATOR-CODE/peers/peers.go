@@ -72,7 +72,7 @@ func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event
 				delete(lastSeen, elevID)
 				update = types.Connection_Event{elevID, false}
 				connectionUpdate <- update
-				fmt.Printf("\nLost: %v \n", id)
+				//fmt.Printf("\nLost: %v \n", id)
 			}
 		}
 	}

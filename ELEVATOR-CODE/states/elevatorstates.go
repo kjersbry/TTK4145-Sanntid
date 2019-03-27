@@ -26,8 +26,8 @@ func InitElevators(local_ID string, drv_floors <-chan int) {
 	var ord [constants.N_FLOORS][constants.N_BUTTONS](types.Order)
 	setFields(types.ES_Idle, -1, elevio.MD_Stop, localelev_ID)
 	setOrderList(ord, localelev_ID)
-	//setOperational()
-	//setConnected() todo???
+	setOperational(true, localelev_ID)
+	setConnected(true, localelev_ID)
 
 	//wait to allow floor signal to arrive if we start on a floor
 	time.Sleep(time.Millisecond * 50)
@@ -128,8 +128,10 @@ func UpdateElevator(
 				setConnected(true, update.Elevator_ID)
 				fmt.Printf("The elevator is reconnected: %v\n", all_elevators[update.Elevator_ID].Connected)
 			} else {
+				
 				setConnected(false, update.Elevator_ID)
 				fmt.Printf("\n%v has been disconnected\n", update.Elevator_ID)
+
 				orderReassigner(update.Elevator_ID, false)
 				order_added <- true
 				lamps.SetAllLamps(all_elevators[localelev_ID])
@@ -164,11 +166,12 @@ func TransmitElev(elev_tx chan<- types.Wrapped_Elevator) {
 func TestPrintAllElevators() {
 	for {
 		fmt.Printf("\n\n")
-		for key, val := range all_elevators {
-			fmt.Printf("\nElev: %s\n", key)
-			types.PrintStates(val)
-		}
-		time.Sleep(time.Second * 5)
+		//for key, val := range all_elevators {
+			fmt.Printf("\nElev: %s\n", localelev_ID)
+			types.PrintStates(all_elevators[localelev_ID])
+			types.PrintOrders(all_elevators[localelev_ID])
+		//}
+		time.Sleep(time.Second * 10)
 	}
 }
 
@@ -364,18 +367,28 @@ func orderReassigner(faultyElevID string, operationError bool) {
 func UpcomingFloor(e types.Elevator) int {
 	if e.Direction == elevio.MD_Up {
 		return e.Floor + 1
-	} else {
+	} else if e.Direction == elevio.MD_Down {
 		return e.Floor - 1
+	} else {
+		return e.Floor
 	}
 }
 
 //Returns a slice of the working elevators UNTESTED
-func WorkingElevs( /*elevs map[string]types.Elevator  <- upgrade*/ ) {
-	var workingElevs []string
-	for k, v := range all_elevators { //change to elevs when you move variables
+func WorkingElevs( /*elevs map[string]types.Elevator  <- upgrade*/ ) []types.Elevator{
+	var workingElevs []types.Elevator
+	for _, v := range all_elevators { //change to elevs when you move variables
 		if v.Is_Operational && v.Connected {
-			workingElevs = append(workingElevs, k)
+			workingElevs = append(workingElevs, v)
+		}
+	}
+	return workingElevs
+}
+
+func orderReassignerTest(lostID string) {
+	for i:=0; i < constants.N_BUTTONS; i++{
+		for j:=0; j < constants.N_FLOORS; j++{
+			setOrdered(j, i, lostID, true)
 		}
 	}
 }
-

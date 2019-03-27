@@ -5,8 +5,12 @@ import (
 	"../states"
 	"../types"
 	"../orders"
+	"../constants"
+	"fmt"
+	
 )
 
+/*
 //Kjersti's
 func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.AssignedOrder) {
 	for {
@@ -18,34 +22,47 @@ func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.As
 			add_order <- dummyassigned //skriver resultat til order
 		}
 	}
-}
+}*/
 
-/*
+
 //Ole's
-func AssignOrder(drv_button <-chan ButtonEvent, add_order chan<- AssignedOrder) {
+func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.AssignedOrder, local_ID string) {
+	var previous elevio.ButtonEvent   //Todo -> Add a time restriction
 	for {
 		select {
 		case order := <-drv_button:
-			workingElevs = states.WorkingElevs
-			//WorkingElevs returns a slice with all elevators that are connected and operational. Must be made.
-			var selected_elevator = assignAlg(order, workingElevs)
-			assigned_order := AssignedOrder{order, selected_elevator}
-			add_order <- assigned_order //skriver resultat til order
+			if previous != order {
+				if order.Button == elevio.BT_Cab {
+					assigned_order := types.AssignedOrder{local_ID, order}
+					add_order <- assigned_order //skriver resultat til order
+				} else {
+				workingElevs := states.WorkingElevs()
+				var selected_elevator = assignAlg(order, workingElevs)
+				assigned_order := types.AssignedOrder{selected_elevator, order}
+				add_order <- assigned_order //skriver resultat til order
+				}
+			}
+			previous = order
 		}
 	}
-}*/
+}
+
+
 func assignAlg(new_order elevio.ButtonEvent, elevators []types.Elevator) string {
+
 	var best_chooice string
 	var best_duration float64
 
 	var currentDuration float64
 
-	for _, elev := range elevators {
+	for i, elev := range elevators {
 		if elev.Is_Operational {
 			elev.Orders[new_order.Floor][new_order.Button].State = types.OS_AcceptedOrder
 			currentDuration = timeToIdle(elev)
 
-			if (currentDuration < best_duration) || best_duration == 0 {
+			fmt.Printf("\nElevator %v has the duration: %v", elev.Elevator_ID, currentDuration)
+
+			if (currentDuration < best_duration) || i == 0 {
 				best_duration = currentDuration
 				best_chooice = elev.Elevator_ID
 			}
@@ -61,39 +78,42 @@ func timeToIdle(e types.Elevator) float64 {
 	var duration float64
 	duration = 0
 
-	switch e.State { //The switch has been tested.
+	switch e.State { 
 	case types.ES_Idle:
-		e.Direction = orders.ChooseDirection(e) //Put back orders.
+		e.Direction = orders.ChooseDirection(e)
 		if e.Direction == elevio.MD_Stop {
 			return duration
 		}
 		break
 
 	case types.ES_DoorOpen:
-		duration -= 3 / 2 //1. Find proper constant name (or use 3. sec) 2. Potential datatype problems?
+		duration -= 1.5 //1. Find proper constant name (or use 3. sec) 2. Potential datatype problems?
 		break
 
 	case types.ES_Moving:
-		duration += 5 / 2 //Find a proper name for the constant
+		duration += 2.5 //Find a proper name for the constant
 		e.Floor = states.UpcomingFloor(e)
 		break
 	}
 
-	//For loop and nested functionality remains untested
 	for {
 		if orders.ShouldStop(e) {
-			for button := 0; button < 3; button++ {
+			for button := 0; button < constants.N_BUTTONS; button++ {
+				if e.Floor < 0 || e.Floor >= constants.N_FLOORS {
+
+				}
 				e.Orders[e.Floor][button].State = types.OS_NoOrder
 			}
-			duration += 3                    //Put in proper constant name
-			e.Direction = orders.ChooseDirection(e) //put back orders.
+			
+			e.Direction = orders.ChooseDirection(e)
 			if e.Direction == elevio.MD_Stop {
 				return duration
 			}
+			duration += 3     
 		}
 
 		e.Floor = states.UpcomingFloor(e)
 
-		duration += 5 //TravelTime //Insert the proper operator
+		duration += 4 //TravelTime //Insert the proper operator
 	}
 }
