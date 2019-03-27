@@ -6,7 +6,7 @@ import (
 	"../types"
 	"../orders"
 	"../constants"
-	"fmt"
+//	"fmt"
 	
 )
 
@@ -59,8 +59,6 @@ func assignAlg(new_order elevio.ButtonEvent, elevators []types.Elevator) string 
 		if elev.Is_Operational {
 			elev.Orders[new_order.Floor][new_order.Button].State = types.OS_AcceptedOrder
 			currentDuration = timeToIdle(elev)
-
-			fmt.Printf("\nElevator %v has the duration: %v", elev.Elevator_ID, currentDuration)
 
 			if (currentDuration < best_duration) || i == 0 {
 				best_duration = currentDuration

@@ -7,13 +7,11 @@ import (
 	 //"fmt"
 )
 
-func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool { 
+func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool) { 
 	order_map, is_new_local_order := combineMaps(local_ID, local_elev, elev_2)
 	order_map = removeDuplicates(order_map)
 	return order_map, is_new_local_order
 }
- 
-
 
 func getPresedence(order_1 types.Order, order_2 types.Order) types.Order {
 	if order_1.Counter > order_2.Counter {
@@ -46,7 +44,7 @@ func MaxState(s1 types.OrderState, s2 types.OrderState) types.OrderState{
 
 
 func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order,
-	 map_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool { //returntype
+	 map_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool) { //returntype
 		
 		is_new_local_order := false
 		

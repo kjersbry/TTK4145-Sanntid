@@ -21,20 +21,17 @@ func ClearAtCurrentFloor(e types.Elevator) [constants.N_FLOORS][constants.N_BUTT
 }
 
 func IsOrder(e types.Elevator, floor int, button elevio.ButtonType) bool {
-    //todo: vurder denne. Når skal den si at det er bestilling (= når skal den stoppe), skal den stoppe på unaccepted også?
     if(floor < 0 || floor > 3){
       fmt.Printf("\nIs: out of range %d \n", floor)
       return false
     } //todo: ta vekk! litt for quickfix
     
-    return (e.Orders[floor][button].State != types.OS_NoOrder)
-    /* --> : todo
+    //return (e.Orders[floor][button].State != types.OS_NoOrder)
     if(button == elevio.BT_Cab){
         return (e.Orders[floor][button].State != types.OS_NoOrder)
     } else {
         return (e.Orders[floor][button].State == types.OS_AcceptedOrder)
     }
-    */
 }
 
 func IsOrderCurrentFloor(e types.Elevator) bool {

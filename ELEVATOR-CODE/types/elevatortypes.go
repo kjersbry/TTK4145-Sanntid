@@ -82,9 +82,14 @@ func OrderToString(o Order) string {
 
 func PrintOrders(e Elevator) {
 	fmt.Printf("\n\n-----Queue------\n")
-	for i := 0; i < constants.N_FLOORS; i++ {
-		for j := 0; j < constants.N_BUTTONS; j++ {
-			fmt.Printf("%s ", OrderToString(e.Orders[i][j]))
+	for j := 0; j < constants.N_BUTTONS; j++ {
+		for i := 0; i < constants.N_FLOORS; i++ {
+			if(j == 0 && i == 3) || (j == 1 && i == 0){
+				fmt.Printf("-  ")
+
+			} else {
+				fmt.Printf("%s ", OrderToString(e.Orders[i][j]))
+			}
 		}
 		fmt.Printf("\n")
 	}

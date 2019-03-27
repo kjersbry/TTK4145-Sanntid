@@ -90,7 +90,7 @@ func runElevator(local_ID string, server_port string) {
 
 	//go states.TestPeersPrint()  Put back in soon
 
-	//go states.TestPrintAllElevators()
+	go states.TestPrintAllElevators()
 
 	/*Infinite loop: */
 	fin := make(chan int)

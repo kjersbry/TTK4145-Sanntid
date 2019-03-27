@@ -9,6 +9,7 @@ import (
 	"../lamps"
 	"../orders"
 	"../types"
+	"../merger"
 )
 
 var all_elevators map[string]types.Elevator
@@ -72,15 +73,12 @@ func UpdateElevator(
 
 			//types.PrintStates(all_elevators[localelev_ID])
 
-		case order := <-add_order:
-			//ord := types.Order{-1/*todo: ORDER-ID*/, types.OS_UnacceptedOrder}
+		case order := <- add_order:
 			setOrdered(order.Order.Floor, int(order.Order.Button), order.Elevator_ID, false)
 
 			if order.Elevator_ID == localelev_ID {
 				order_added <- true
-				/*TODO: viktig, dette signalet må i tillegg gis når det har blitt lagt til noe i local
-				sin kø fra merge, nå ville den kun fått varsel når den selv har lagt til i sin kø, ikke når andre har lagt til*/
-				//fmt.Printf("\nAdded order fl. %d\n", order.Order.Floor)
+				fmt.Printf("\nAssigned to self\n")
 				lamps.SetAllLamps(all_elevators[localelev_ID])
 			}
 		case <-clear_floor:
@@ -121,7 +119,12 @@ func UpdateElevator(
 			//update orders: Uncomment next two lines when merge is ready
 			order_map, is_new_local_order := merger.MergeOrders(localelev_ID, getOrderMap(all_elevators), received.Orders)
 			setFromOrderMap(order_map)
-			if(is_new_local_order){ order_added <- true }
+			if(is_new_local_order){
+				order_added <- true 
+				lamps.SetAllLamps(all_elevators[localelev_ID])
+				//fmt.Printf("\nAdded order\n")
+
+			}
 
 		case update := <-connectionUpdate: //Untested case
 			if update.Connected {
@@ -166,12 +169,15 @@ func TransmitElev(elev_tx chan<- types.Wrapped_Elevator) {
 func TestPrintAllElevators() {
 	for {
 		fmt.Printf("\n\n")
-		//for key, val := range all_elevators {
-			fmt.Printf("\nElev: %s\n", localelev_ID)
+		for key, val := range all_elevators {
+			/*fmt.Printf("\nElev: %s\n", localelev_ID)
 			types.PrintStates(all_elevators[localelev_ID])
-			types.PrintOrders(all_elevators[localelev_ID])
-		//}
-		time.Sleep(time.Second * 10)
+			types.PrintOrders(all_elevators[localelev_ID])*/
+			fmt.Printf("\nElev: %s\n", key)
+			//types.PrintStates(val)
+			types.PrintOrders(val)
+		}
+		time.Sleep(time.Second * 2)
 	}
 }
 
@@ -335,7 +341,7 @@ func setOrderList(list [constants.N_FLOORS][constants.N_BUTTONS]types.Order, ID 
 //TODO: Move
 func orderReassigner(faultyElevID string, operationError bool) {
 	var e = all_elevators[faultyElevID]
-	fmt.Printf("\norderReassigner started\n")
+	fmt.Printf("\norderReassigner\n")
 	for i := 0; i < constants.N_FLOORS; i++ {
 		/*if i == 0 {   //Remove this after test
 			fmt.Printf("\nOuter For loop started\n")
@@ -349,7 +355,7 @@ func orderReassigner(faultyElevID string, operationError bool) {
 				fmt.Printf("\nInner For loop ended\n")
 			}*/
 			if e.Orders[i][j].State == types.OS_AcceptedOrder {
-				fmt.Printf("\nsetOrdered will run\n")
+				//fmt.Printf("\nsetOrdered will run\n")
 				setOrdered(i, j, localelev_ID, true)
 				
 			}
