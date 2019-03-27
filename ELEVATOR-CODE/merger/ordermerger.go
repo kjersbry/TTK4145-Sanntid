@@ -3,15 +3,14 @@ package merger
 import (
 	 "../constants"
 	 "../types"
-	 "reflect"
-	 "fmt"
+	 //"reflect"
+	 //"fmt"
 )
 
-func Merger(local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order { 
-	
-	order_map := combineMaps(local_elev, elev_2)
+func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool { 
+	order_map, is_new_local_order := combineMaps(local_ID, local_elev, elev_2)
 	order_map = removeDuplicates(order_map)
-	return order_map
+	return order_map, is_new_local_order
 }
  
 
@@ -46,38 +45,33 @@ func MaxState(s1 types.OrderState, s2 types.OrderState) types.OrderState{
 
 
 
-func combineMaps(local_map map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order,
-	 map_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order { //returntype
-	eq := reflect.DeepEqual(local_map, map_2)
-	if eq {
-		return local_map
-	} else {
+func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order,
+	 map_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool { //returntype
+		
+		is_new_local_order := false
+		
 		for key, val:= range local_map {
-			temp, is := map_2[key]
+			temp, keyExists := map_2[key]
 			temp_local := val
-				if is {
-			for i:=range val {
-				for j:=range val[i]{
-					s1:=temp_local[i][j].State
-					s2:=temp[i][j].State
 
-					fmt.Printf("%d",temp_local[i][j].Counter)
-					fmt.Printf("%d",temp[i][j].Counter)
-					
+			if keyExists {
+			for i:= range val {
+				for j:=range val[i]{
+					s1 := temp_local[i][j].State
+					s1_was := s1
+					s2 := temp[i][j].State
 					if j==constants.N_BUTTONS-1 { //antar 0 indeksering, identifiserer cab call
 						s2 = s1
 						temp[i][j].Counter = temp_local[i][j].Counter
 					} else if temp_local[i][j].Counter == temp[i][j].Counter { 
-						fmt.Printf("\nhei\n")
 						switch {
 						case (s1==types.OS_UnacceptedOrder && s2==types.OS_UnacceptedOrder):
-							fmt.Printf("\nhei\n")
 							s1 = types.OS_AcceptedOrder
-							s2=s1
+							s2 = s1
 							break
 						case ((s1-s2==2) || (s2-s1==2)):
 							s1 = types.OS_NoOrder
-							s2=s1
+							s2 = s1
 							break
 						default :
 							s1= MaxState(s1,s2)
@@ -92,36 +86,39 @@ func combineMaps(local_map map[string][constants.N_FLOORS][constants.N_BUTTONS]t
 						temp[i][j].State = presedence.State
 					}
 					presedence := getPresedence(temp_local[i][j], temp[i][j])
-						temp_local[i][j].Counter = presedence.Counter
-						temp[i][j].Counter = presedence.Counter
+					temp_local[i][j].Counter = presedence.Counter
+					temp[i][j].Counter = presedence.Counter
+
+					//Check if FSM should get local orders updated-signal
+					if (key == local_ID) && (s1 != s1_was) && (s1 == types.OS_AcceptedOrder) {
+						is_new_local_order = true
+					} 
 				}
-						
-					
 				}
 				map_2[key] = temp
 				local_map[key] = temp_local
 			}
 			}
-		}
-		return local_map
+		
+		return local_map, is_new_local_order
 }
 
 func removeDuplicates(elev_orders map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order {//returntype
 	var tmp_list [constants.N_ELEVATORS]string;
 	
-	index:=0
+	index := 0
 
 	for id, _ := range elev_orders{
 		tmp_list[index]=id
 		index++
 	}
 	for h:= 0; h < len(tmp_list); h++{
-		elevator_1:=tmp_list[h]
-		for i:= h+1; i<len(tmp_list); i++ {
-			elevator_2:=tmp_list[i]
-			for j:=range elev_orders[elevator_1]{
-				floor:=elev_orders[elevator_1][j]
-					for k:= range floor {
+		elevator_1 := tmp_list[h]
+		for i := h+1; i < len(tmp_list); i++ {
+			elevator_2 := tmp_list[i]
+			for j := range elev_orders[elevator_1]{
+				floor := elev_orders[elevator_1][j]
+					for k := range floor {
 						
 						s1:=floor[k].State
 						s2:=elev_orders[elevator_2][j][k].State

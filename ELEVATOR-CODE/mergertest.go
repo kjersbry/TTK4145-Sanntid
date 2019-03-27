@@ -17,17 +17,19 @@ func main(){
 	}
 	var ord_1 [constants.N_FLOORS][constants.N_BUTTONS](types.Order)
 	var ord_2 [constants.N_FLOORS][constants.N_BUTTONS](types.Order)
-	ord_1[1][1].State=1
-	ord_1[1][1].Counter=1
-	ord_2[1][1].State=1
-	ord_2[1][1].Counter=1
-	
-	test_1["1"]=ord_1
-	test_2["1"]=ord_2
+	ord_1[2][2].State=1
+	ord_1[2][2].Counter=1
+	ord_1[3][2].State=2
+	ord_1[3][2].Counter=1
+	ord_2[3][2].State=1
+	ord_2[3][2].Counter=1
+
+	test_1["3"]=ord_1
+	test_2["2"]=ord_2
 
 	order_map:=merger.Merger(test_1,test_2)
 	
-	types.PrintOrders2(order_map["1"])
+	types.PrintOrders2(order_map["3"])
 	//map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order
 	//types.PrintOrders2(map[key])
 
