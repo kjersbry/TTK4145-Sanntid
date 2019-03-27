@@ -119,7 +119,7 @@ func UpdateElevator(
 			}
 
 			//update orders: Uncomment next two lines when merge is ready
-			//order_map, is_new_local_order := modulename.mergeOrders(getOrderMap(all_elevators), received.Orders)
+			//order_map /*, is_new_local_order*/ := modulename.mergeOrders(getOrderMap(all_elevators), received.Orders)
 			//setFromOrderMap(order_map)
 			//if(is_new_local_order){ order_added <- true }
 
@@ -233,6 +233,10 @@ func ReadLocalElevator() types.Elevator {
 
 func ReadAllElevators() map[string]types.Elevator {
 	return all_elevators
+}
+
+func ReadLocalElevatorID() string {
+	return localelev_ID
 }
 
 func keyExists(key string) bool {

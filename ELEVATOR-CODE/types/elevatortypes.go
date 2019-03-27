@@ -73,9 +73,11 @@ func OrderToString(o Order) string {
 	case OS_NoOrder:
 		return "No"
 	case OS_AcceptedOrder:
+		return "Acc"
 	case OS_UnacceptedOrder:
+		return "Un"
 	}
-	return "Yes"
+	return "-"
 }
 
 func PrintOrders(e Elevator) {
@@ -83,6 +85,17 @@ func PrintOrders(e Elevator) {
 	for i := 0; i < constants.N_FLOORS; i++ {
 		for j := 0; j < constants.N_BUTTONS; j++ {
 			fmt.Printf("%s ", OrderToString(e.Orders[i][j]))
+		}
+		fmt.Printf("\n")
+	}
+	fmt.Printf("\n----------------\n\n")
+}
+
+func PrintOrders2(o [constants.N_FLOORS][constants.N_BUTTONS]Order) {
+	fmt.Printf("\n\n-----Queue------\n")
+	for i := 0; i < constants.N_FLOORS; i++ {
+		for j := 0; j < constants.N_BUTTONS; j++ {
+			fmt.Printf("%s ", OrderToString(o[i][j]))
 		}
 		fmt.Printf("\n")
 	}
