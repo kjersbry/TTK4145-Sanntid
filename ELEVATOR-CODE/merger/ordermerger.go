@@ -7,6 +7,10 @@ import (
 	 //"fmt"
 )
 
+/*TODO!!!!!:
+- test uten duplikat
+- slukke lys ved sletting fra duplikat*/
+
 func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool) { 
 	order_map, is_new_local_order := combineMaps(local_ID, local_elev, elev_2)
 	order_map = removeDuplicates(order_map)
