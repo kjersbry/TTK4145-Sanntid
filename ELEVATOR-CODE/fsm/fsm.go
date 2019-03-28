@@ -5,6 +5,7 @@ import (
 	"../orders"
 	"../states"
 	"../types"
+	"../constants"
 	"fmt"
 )
 
@@ -90,36 +91,43 @@ func onDoorTimeout() (types.ElevatorState, elevio.MotorDirection) {
 func onListUpdate() (types.ElevatorState, elevio.MotorDirection, bool) {
 	fmt.Printf("\nonListUpdate\n")
 
-	state := states.ReadLocalElevator().State
+	e := states.ReadLocalElevator()
+	state := e.State
 	fmt.Printf("Current state: %s\n", types.StateToString(state))
-	dir := states.ReadLocalElevator().Direction
+	dir := e.Direction
 	start_timer := false
 
 	switch state {
 	case types.ES_DoorOpen:
 		//if(states.ReadLocalElevator().Floor == floor){ previous version
-		if orders.IsOrderCurrentFloor(states.ReadLocalElevator()) {
+		if orders.IsOrderCurrentFloor(e) {
 			start_timer = true
 		}
 
 	case types.ES_Idle:
 		//if(states.ReadLocalElevator().Floor == floor){
-		if orders.IsOrderCurrentFloor(states.ReadLocalElevator()) {
+		if orders.IsOrderCurrentFloor(e) {
 			elevio.SetDoorOpenLamp(true)
 			start_timer = true
 			state = types.ES_DoorOpen
 		} else {
 			fmt.Printf("\nExecuting ChooseDirection\n")
-			dir = orders.ChooseDirection(states.ReadLocalElevator())
+			dir = orders.ChooseDirection(e)
 			fmt.Printf("\nFinished ChooseDirection\n")
 			elevio.SetMotorDirection(dir)
 			fmt.Printf("\nDir was set to: %s\n", types.DirToString(dir))
 			state = types.ES_Moving
 		}
-	case types.ES_Moving:
-		
-	
-	default:
+	}
+	/*this should not happen, but need to avoid getting 
+		stuck if there's a bug in listupdatesignalling somewhere:*/
+	if dir == elevio.MD_Stop && state == types.ES_Moving {
+		if e.Floor == constants.N_FLOORS {
+			dir = elevio.MD_Down
+		} else {
+			dir = elevio.MD_Up
+		}
+		elevio.SetMotorDirection(dir)
 	}
 	return state, dir, start_timer
 }
