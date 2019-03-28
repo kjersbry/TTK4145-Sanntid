@@ -84,7 +84,7 @@ func UpdateElevator(
 
 		case order := <- add_order:
 			setOrdered(order.Order.Floor, int(order.Order.Button), order.Elevator_ID, false)
-
+			//lamps.SetAllLamps(localelev_ID, all_elevators)
 			if order.Elevator_ID == localelev_ID && order.Order.Button == elevio.BT_Cab {
 				order_added <- true
 				lamps.SetAllLamps(localelev_ID, all_elevators)

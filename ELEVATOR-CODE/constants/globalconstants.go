@@ -10,4 +10,4 @@ const N_ELEVATORS int = 3
 
 const DOOR_OPEN_SEC = 3
 const TRANSMIT_MS = 200
-const ELEVATOR_TIMEOUT = 15000 * time.Millisecond
+const ELEVATOR_TIMEOUT = 15 * time.Second

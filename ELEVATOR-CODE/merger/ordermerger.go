@@ -10,7 +10,11 @@ import (
 
 func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool, bool) { 
 	order_map, is_new_local_order, should_light := combineMaps(local_ID, local_elev, elev_2)
-	order_map, should_light = removeDuplicates(local_ID, order_map)
+	new_should_light := false
+	order_map, new_should_light = removeDuplicates(local_ID, order_map)
+	if should_light || new_should_light {
+		should_light = true
+	}
 	return order_map, is_new_local_order, should_light
 }
 
@@ -84,8 +88,8 @@ func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][cons
 						
 						s2 = s1
 						temp[i][j].Counter = temp_local[i][j].Counter
-						temp_local[i][j].State = s1
-						temp[i][j].State = s2
+						//temp_local[i][j].State = s1
+						//temp[i][j].State = s2
 
 					} else if temp_local[i][j].Counter == temp[i][j].Counter { 
 						switch {
@@ -102,13 +106,16 @@ func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][cons
 							s2=s1
 							break
 							}	
-						temp_local[i][j].State=s1
-						temp[i][j].State=s2
+						//temp_local[i][j].State=s1
+						//temp[i][j].State=s2
 					} else {
 						presedence:=getPresedence(temp_local[i][j],temp[i][j])
-						temp_local[i][j].State = presedence.State
-						temp[i][j].State = presedence.State
+						s1 = presedence.State
+						s2 = presedence.State
 					}
+					temp_local[i][j].State = s1
+					temp[i][j].State = s2
+
 					presedence := getPresedence(temp_local[i][j], temp[i][j])
 					temp_local[i][j].Counter = presedence.Counter
 					temp[i][j].Counter = presedence.Counter
