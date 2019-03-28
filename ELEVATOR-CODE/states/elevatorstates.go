@@ -31,12 +31,13 @@ func InitElevators(local_ID string, drv_floors <-chan int) {
 	setOrderList(ord, localelev_ID)
 	setOperational(true, localelev_ID)
 	setConnected(true, localelev_ID)
-
+	lamps.SetAllLamps(all_elevators[localelev_ID])
 	//wait to allow floor signal to arrive if we start on a floor
 	time.Sleep(time.Millisecond * 50)
 	select {
 	case floor := <-drv_floors:
 		setFloor(floor, localelev_ID)
+		elevio.SetFloorIndicator(floor)
 		fmt.Printf("\nhei\n")
 	default:
 		if all_elevators[localelev_ID].Floor == -1 {
@@ -45,6 +46,10 @@ func InitElevators(local_ID string, drv_floors <-chan int) {
 			elevio.SetMotorDirection(all_elevators[localelev_ID].Direction)
 			setState(types.ES_Moving, localelev_ID)
 			fmt.Printf("\nhei2\n")
+			/*//forslag for å fikse hvis den kjører ned etter init:
+			send <- start timer signal 
+			Ta i mot i et event
+			Der skal heisen snus.*/
 		}
 	}
 }
@@ -102,9 +107,6 @@ func UpdateElevator(
 
 				setOperational(true, received.Elevator_ID)
 				setConnected(true, received.Elevator_ID)
-
-				//Test
-				//types.PrintOrders(all_elevators[received.Elevator_ID])
 
 				fmt.Printf("\nAdded new elevator!\n")
 

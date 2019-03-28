@@ -34,6 +34,7 @@ func FSM(floor_reached <-chan bool, clear_floor chan<- int, order_added <-chan b
 			state, dir, start_timer := onListUpdate()
 			if start_timer {
 				clear_floor <- states.ReadLocalElevator().Floor
+				fmt.Printf("\nstart_timer was true\n")
 			}
 			update_state <- state
 			update_direction <- dir
@@ -115,6 +116,9 @@ func onListUpdate() (types.ElevatorState, elevio.MotorDirection, bool) {
 			fmt.Printf("\nDir was set to: %s\n", types.DirToString(dir))
 			state = types.ES_Moving
 		}
+	case types.ES_Moving:
+		
+	
 	default:
 	}
 	return state, dir, start_timer

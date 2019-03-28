@@ -26,28 +26,31 @@ import (
 
 //use this one
 func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.AssignedOrder, local_ID string) {
-	var previous_order elevio.ButtonEvent   //Todo -> Add a time restriction
-	var previous_assigned_order types.AssignedOrder
+	//var previous_order elevio.ButtonEvent
+	//previous_order.Floor = -1
+	//var previous_assigned_order types.AssignedOrder
+	//test: holde inne knappen todo
 	var assigned_order types.AssignedOrder
-	
+
 	for {
 		select {
 		case order := <-drv_button:
-			if previous_order != order {
+			//if previous_order != order {
 				if order.Button == elevio.BT_Cab {
 					assigned_order = types.AssignedOrder{local_ID, order}
+					//previous_assigned_order = assigned_order
 					add_order <- assigned_order //skriver resultat til order
 				} else {
-				workingElevs := states.WorkingElevs()
-				var selected_elevator = assignAlg(order, workingElevs)
-				assigned_order := types.AssignedOrder{selected_elevator, order}
-				add_order <- assigned_order //skriver resultat til order
+					workingElevs := states.WorkingElevs()
+					var selected_elevator = assignAlg(order, workingElevs)
+					assigned_order := types.AssignedOrder{selected_elevator, order}
+					add_order <- assigned_order //skriver resultat til order
+					//previous_order = order	
+					//previous_assigned_order = assigned_order
 				}
-			} else {
+			/*} else {
 				add_order <- previous_assigned_order 
-			}
-			previous_order = order
-			previous_assigned_order = assigned_order
+			}*/
 		}
 	}
 }
