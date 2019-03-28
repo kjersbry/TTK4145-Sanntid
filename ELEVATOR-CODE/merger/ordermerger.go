@@ -102,12 +102,12 @@ func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][cons
 }
 
 func removeDuplicates(elev_orders map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order {//returntype
-	var tmp_list [constants.N_ELEVATORS]string;
+	var tmp_list []string;
 	
 	index := 0
 
-	for id, _ := range elev_orders{
-		tmp_list[index]=id
+	for id, _ := range elev_orders {
+		tmp_list[index] = id
 		index++
 	}
 	for h:= 0; h < len(tmp_list); h++{
