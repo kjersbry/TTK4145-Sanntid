@@ -28,7 +28,7 @@ type floor_time struct { //Bad name.
 func OperationObserver(Operation_Update chan<- types.Operation_Event, localID string) {  //Operation observer running once for no reason?
 	var elev_map map[string]types.Elevator 
 	var update types.Operation_Event
-	lastChange := make(map[string]floor_time)   operations
+	lastChange := make(map[string]floor_time)
 	var temp floor_time
 
 	for {

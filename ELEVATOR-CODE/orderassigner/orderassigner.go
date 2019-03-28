@@ -5,14 +5,7 @@ import (
 	"../states"
 	"../types"
 	"../orders"
-	"../constants"
-<<<<<<< HEAD
-//	"fmt"
-=======
-	"fmt"
-	"time"  //Remove after testing
->>>>>>> origin/operations
-	
+	"../constants"	
 )
 
 
