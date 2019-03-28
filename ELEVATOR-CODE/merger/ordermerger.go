@@ -10,6 +10,7 @@ import (
 /*TODO!!!!!:
 - test uten duplikat
 - slukke lys ved sletting fra duplikat*/
+//er counter alltid riktig?
 
 func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool) { 
 	order_map, is_new_local_order := combineMaps(local_ID, local_elev, elev_2)
@@ -18,10 +19,10 @@ func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][con
 }
 
 func getPresedence(order_1 types.Order, order_2 types.Order) types.Order {
-	if order_1.Counter > order_2.Counter {
-		return order_1
-	} else {
+	if order_2.Counter > order_1.Counter {
 		return order_2
+	} else {
+		return order_1
 	}
 
 }
@@ -39,10 +40,10 @@ func largestID(elev_1 string, elev_2 string) string {
 	return elev_2
 }
 func MaxState(s1 types.OrderState, s2 types.OrderState) types.OrderState{
-	if s1>s2 {
-		return s1
+	if s2>s1 {
+		return s2
 	}
-	return s2
+	return s1
 }
 
 
@@ -72,7 +73,7 @@ func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][cons
 							s2 = s1
 							break
 						case ((s1-s2==2) || (s2-s1==2)):
-							s1 = types.OS_NoOrder
+							s1 = types.OS_AcceptedOrder
 							s2 = s1
 							break
 						default :
@@ -106,30 +107,31 @@ func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][cons
 }
 
 func removeDuplicates(elev_orders map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order {//returntype
-	var tmp_list []string;
+	var tmp_list [constants.N_ELEVATORS]string;
 	
 	index := 0
 
-	for id, _ := range elev_orders {
-		tmp_list[index] = id
+	for id, _ := range elev_orders{
+		tmp_list[index]=id
 		index++
 	}
 	for h:= 0; h < len(tmp_list); h++{
 		elevator_1 := tmp_list[h]
 		for i := h+1; i < len(tmp_list); i++ {
 			elevator_2 := tmp_list[i]
-			for j := range elev_orders[elevator_1]{
-				floor := elev_orders[elevator_1][j]
-					for k := range floor {
+			for j := range constants.N_FLOORS{
+					for k := 0 ; k<constants.N_BUTTONS-1 {
 						
-						s1:=floor[k].State
+						s1:=elev_orders[elevator_1][j][k].State
 						s2:=elev_orders[elevator_2][j][k].State
 						if (!(s1==types.OS_NoOrder))&&(!(s2==types.OS_NoOrder)){
+							
 							largest_id:= largestID(elevator_1,elevator_2)
 							temp := elev_orders[largest_id]
 							temp[j][k].State = types.OS_NoOrder
 							temp[j][k].Counter++
 							elev_orders[largest_id] = temp	
+							
 							}
 						
 					}

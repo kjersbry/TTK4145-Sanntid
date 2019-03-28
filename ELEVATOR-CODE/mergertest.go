@@ -27,7 +27,7 @@ func main(){
 	test_1["3"]=ord_1
 	test_2["2"]=ord_2
 
-	order_map:=merger.Merger(test_1,test_2)
+	order_map:=merger.MergeOrders(test_1,test_2)
 	
 	types.PrintOrders2(order_map["3"])
 	//map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order
