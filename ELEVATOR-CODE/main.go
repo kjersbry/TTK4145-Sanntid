@@ -19,7 +19,8 @@ import (
 )
 
 /* TODO: sjekk om det er flere defaults på for{select{}} (men ikke fjern der det er select uten for)*/
-
+/*Possible todo: hva hvis servern skrus av, ser ut som at den bare fortsetter å kjøre da. Bør den 
+gjøre noe annet enn reassign?*/
 const default_sport int = 15657
 const default_pport int = 1234
 
@@ -90,7 +91,7 @@ func runElevator(local_ID string, server_port string) {
 
 	//go states.TestPeersPrint()  Put back in soon
 
-	go states.TestPrintAllElevators()
+	//go states.TestPrintAllElevators()
 
 	/*Infinite loop: */
 	fin := make(chan int)

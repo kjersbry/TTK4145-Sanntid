@@ -90,6 +90,7 @@ func onListUpdate() (types.ElevatorState, elevio.MotorDirection, bool) {
 	fmt.Printf("\nonListUpdate\n")
 
 	state := states.ReadLocalElevator().State
+	fmt.Printf("Current state: %s\n", types.StateToString(state))
 	dir := states.ReadLocalElevator().Direction
 	start_timer := false
 
@@ -107,8 +108,11 @@ func onListUpdate() (types.ElevatorState, elevio.MotorDirection, bool) {
 			start_timer = true
 			state = types.ES_DoorOpen
 		} else {
+			fmt.Printf("\nExecuting ChooseDirection\n")
 			dir = orders.ChooseDirection(states.ReadLocalElevator())
+			fmt.Printf("\nFinished ChooseDirection\n")
 			elevio.SetMotorDirection(dir)
+			fmt.Printf("\nDir was set to: %s\n", types.DirToString(dir))
 			state = types.ES_Moving
 		}
 	default:

@@ -9,11 +9,13 @@ import (
 	"../lamps"
 	"../orders"
 	"../types"
-	//"../merger"
+	"../merger"
 )
 
 var all_elevators map[string]types.Elevator
 var localelev_ID string
+
+/*Måå fikses, fikk concurrent map read and map write*/
 
 func InitElevators(local_ID string, drv_floors <-chan int) {
 	localelev_ID = local_ID
@@ -61,6 +63,7 @@ func UpdateElevator(
 		select {
 		case new_state := <- update_state:
 			setState(new_state, localelev_ID)
+			fmt.Printf("\nState was set to: %s\n", types.StateToString(new_state))
 			//types.PrintStates(all_elevators[localelev_ID])
 
 		case new_floor := <-update_floor:
@@ -76,9 +79,8 @@ func UpdateElevator(
 		case order := <- add_order:
 			setOrdered(order.Order.Floor, int(order.Order.Button), order.Elevator_ID, false)
 			
-			if order.Elevator_ID == localelev_ID {
+			if order.Elevator_ID == localelev_ID && order.Order.Button == elevio.BT_Cab {
 				order_added <- true
-				//fmt.Printf("\nassigned to self\n")
 				lamps.SetAllLamps(all_elevators[localelev_ID])
 			}
 		case <- clear_floor:
@@ -86,7 +88,6 @@ func UpdateElevator(
 			lamps.SetAllLamps(all_elevators[localelev_ID])
 
 		case received := <- elev_rx:
-			//fmt.Printf("\n\nrec: ID: %s\n", received.Elevator_ID)
 
 			if received.Elevator_ID == localelev_ID {
 				break
@@ -97,34 +98,30 @@ func UpdateElevator(
 			}
 
 			if !keyExists(received.Elevator_ID) {
-				//fmt.Printf("\n\nID: %s\n", received.Elevator_ID)
-				test := unwrapElevator(received)
-				types.PrintStates(test)
-				all_elevators[test.Elevator_ID] = test //unwrapElevator(received)
+				all_elevators[received.Elevator_ID] = unwrapElevator(received)
 
 				setOperational(true, received.Elevator_ID)
 				setConnected(true, received.Elevator_ID)
 
 				//Test
-				types.PrintOrders(all_elevators[test.Elevator_ID])
+				//types.PrintOrders(all_elevators[received.Elevator_ID])
 
 				fmt.Printf("\nAdded new elevator!\n")
 
 			} else {
 				//update states
 				setFields(received.State, received.Floor, received.Direction, received.Elevator_ID)
-				//fmt.Printf("\n\nrec2: ID: %s\n", received.Elevator_ID)
 			}
 
-			//update orders: Uncomment next two lines when merge is ready
-			/*order_map, is_new_local_order := merger.MergeOrders(localelev_ID, getOrderMap(all_elevators), received.Orders)
+			//update orders
+			order_map, is_new_local_order, is_local_deleted := merger.MergeOrders(localelev_ID, getOrderMap(all_elevators), received.Orders)
 			setFromOrderMap(order_map)
 			if(is_new_local_order){
 				order_added <- true 
 				lamps.SetAllLamps(all_elevators[localelev_ID])
-				//fmt.Printf("\nAdded order\n")
-
-			}*/
+			} else if(is_local_deleted){
+				lamps.SetAllLamps(all_elevators[localelev_ID])
+			}
 
 		case update := <-connectionUpdate: //Untested case
 			if update.Connected {
@@ -161,7 +158,6 @@ func UpdateElevator(
 func TransmitElev(elev_tx chan<- types.Wrapped_Elevator) {
 	for {
 		elev_tx <- wrapElevator(localelev_ID)
-		//elev_tx <- all_elevators[localelev_ID]
 		time.Sleep(time.Millisecond * constants.TRANSMIT_MS)
 	}
 }

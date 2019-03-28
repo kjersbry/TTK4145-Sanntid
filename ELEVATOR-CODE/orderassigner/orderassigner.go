@@ -10,9 +10,9 @@ import (
 	
 )
 
-/*
-//Kjersti's
-func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.AssignedOrder) {
+
+//Assigns only to self. Good to have for testing purposes
+/*func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.AssignedOrder, local_ID string) {
 	for {
 		select {
 		case order := <-drv_button:
@@ -24,8 +24,7 @@ func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.As
 	}
 }*/
 
-
-//Ole's
+//use this one
 func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.AssignedOrder, local_ID string) {
 	var previous_order elevio.ButtonEvent   //Todo -> Add a time restriction
 	var previous_assigned_order types.AssignedOrder
@@ -52,7 +51,6 @@ func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.As
 		}
 	}
 }
-
 
 func assignAlg(new_order elevio.ButtonEvent, elevators []types.Elevator) string {
 

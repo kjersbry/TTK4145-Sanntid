@@ -12,10 +12,11 @@ import (
 - slukke lys ved sletting fra duplikat*/
 //er counter alltid riktig?
 
-func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool) { 
+func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool, bool) { 
 	order_map, is_new_local_order := combineMaps(local_ID, local_elev, elev_2)
-	order_map = removeDuplicates(order_map)
-	return order_map, is_new_local_order
+	var is_local_deleted bool
+	order_map, is_local_deleted = removeDuplicates(local_ID, order_map)
+	return order_map, is_new_local_order, is_local_deleted
 }
 
 func getPresedence(order_1 types.Order, order_2 types.Order) types.Order {
@@ -95,42 +96,44 @@ func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][cons
 					//Check if FSM should get local orders updated-signal
 					if (key == local_ID) && (s1 != s1_was) && (s1 == types.OS_AcceptedOrder) {
 						is_new_local_order = true
-					} 
+					}
 				}
 				}
 				map_2[key] = temp
 				local_map[key] = temp_local
 			}
-			}
+		}
 		
-		return local_map, is_new_local_order
+	return local_map, is_new_local_order
 }
 
-func removeDuplicates(elev_orders map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order {//returntype
-	var tmp_list [constants.N_ELEVATORS]string;
-	
-	index := 0
+func removeDuplicates(local_ID string, elev_orders map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool) {//returntype
+	var tmp_list []string;
+	is_local_deleted := false
 
 	for id, _ := range elev_orders{
-		tmp_list[index]=id
-		index++
+		tmp_list = append(tmp_list, id)
 	}
 	for h:= 0; h < len(tmp_list); h++{
 		elevator_1 := tmp_list[h]
 		for i := h+1; i < len(tmp_list); i++ {
 			elevator_2 := tmp_list[i]
-			for j := range constants.N_FLOORS{
-					for k := 0 ; k<constants.N_BUTTONS-1 {
+			for j := 0; j < constants.N_FLOORS; j++ {
+					for k := 0; k < constants.N_BUTTONS-1; k++ {
 						
 						s1:=elev_orders[elevator_1][j][k].State
 						s2:=elev_orders[elevator_2][j][k].State
 						if (!(s1==types.OS_NoOrder))&&(!(s2==types.OS_NoOrder)){
 							
-							largest_id:= largestID(elevator_1,elevator_2)
+							largest_id:= largestID(elevator_1, elevator_2)
 							temp := elev_orders[largest_id]
 							temp[j][k].State = types.OS_NoOrder
 							temp[j][k].Counter++
 							elev_orders[largest_id] = temp	
+
+							if(largest_id == local_ID){
+								is_local_deleted = true
+							}
 							
 							}
 						
@@ -141,7 +144,7 @@ func removeDuplicates(elev_orders map[string][constants.N_FLOORS][constants.N_BU
 
 		
 	}
-	return elev_orders
+	return elev_orders, is_local_deleted
 }
 	
 

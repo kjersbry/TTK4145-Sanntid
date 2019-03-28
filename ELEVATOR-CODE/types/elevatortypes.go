@@ -120,16 +120,21 @@ func DirToString(dir elevio.MotorDirection) string {
 	return result
 }
 
-func elevToString(e Elevator) string {
-	result := "State: "
-	switch e.State {
+func StateToString(st ElevatorState) string {
+	var result string
+	switch st {
 	case ES_Idle:
-		result += "Idle\n"
+		result = "Idle"
 	case ES_DoorOpen:
-		result += "Door open\n"
+		result = "Door open"
 	case ES_Moving:
-		result += "Moving\n"
+		result = "Moving"
 	}
+	return result
+}
+
+func elevToString(e Elevator) string {
+	result := "State: " + StateToString(e.State) + "\n"
 	result += "Floor: "
 	result += strconv.Itoa(e.Floor)
 	result += "\nDirection: " + DirToString(e.Direction) + "\n"
