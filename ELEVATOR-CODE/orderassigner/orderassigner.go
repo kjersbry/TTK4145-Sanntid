@@ -7,6 +7,7 @@ import (
 	"../orders"
 	"../constants"
 	"fmt"
+	"time"  //Remove after testing
 	
 )
 
@@ -27,6 +28,7 @@ func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.As
 
 //Ole's
 func AssignOrder(drv_button <-chan elevio.ButtonEvent, add_order chan<- types.AssignedOrder, local_ID string) {
+	fmt.Printf("\nAssignalg ran at: %v\n", time.Now())
 	var previous elevio.ButtonEvent   //Todo -> Add a time restriction
 	for {
 		select {
