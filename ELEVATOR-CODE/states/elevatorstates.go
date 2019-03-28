@@ -62,7 +62,7 @@ func UpdateElevator(
 	clear_floor <-chan int, floor_reached chan<- bool, order_added chan<- bool,
 	/*Multiple elevator stuff:*/
 	/*elev_tx is only used in this func to send other elevs when requested bc of backup*/
-	add_order <-chan types.AssignedOrder, elev_rx <-chan types.Wrapped_Elevator, connectionUpdate <-chan types.Connection_Event/*, operationUpdate <-chan types.Operation_Event*/) {
+	add_order <-chan types.AssignedOrder, elev_rx <-chan types.Wrapped_Elevator, connectionUpdate <-chan types.Connection_Event, operationUpdate <-chan types.Operation_Event) {
 
 	for {
 		select {
@@ -143,16 +143,17 @@ func UpdateElevator(
 				types.PrintOrders(all_elevators[localelev_ID])
 			}
 			//TestPeersPrint()
-		/*case update := <-operationUpdate: //Untested case
-			if update.Is_Operational {
-				setOperational(true, update.Elevator_ID)
-			} else {
-				fmt.Printf("\nThis was true\n")
-				setOperational(false, update.Elevator_ID)
-				orderReassigner(update.Elevator_ID, true)
+		case update := <-operationUpdate:
+			setOperational(update.Is_Operational, update.Elevator_ID)
+			if update.Is_Operational { //remove this after testing
+				fmt.Printf("\nID: %v has been marked as operational\n", update.Elevator_ID)
+			}
+			if !update.Is_Operational && update.Elevator_ID != localelev_ID { 
+				fmt.Printf("\nID: %v has been marked as !operational\n", update.Elevator_ID)
+				orderReassigner(update.Elevator_ID, true)  //Dette fungerer ikke   //Må sørge for at den for en bestilling til en annen etasjen enn den er i.
 				order_added <- true
 				lamps.SetAllLamps(all_elevators[localelev_ID])
-			}*/
+			}
 		}
 	}
 }
@@ -339,23 +340,12 @@ func setOrderList(list [constants.N_FLOORS][constants.N_BUTTONS]types.Order, ID 
 //TODO: Move
 func orderReassigner(faultyElevID string, operationError bool) {
 	var e = all_elevators[faultyElevID]
-	fmt.Printf("\norderReassigner\n")
 	for i := 0; i < constants.N_FLOORS; i++ {
-		/*if i == 0 {   //Remove this after test
-			fmt.Printf("\nOuter For loop started\n")
-		} else if i == constants.N_FLOORS - 1 {
-			fmt.Printf("\nOuter For loop ended\n")
-		}*/
 		for j := 0; j < constants.N_BUTTONS-1; j++ {
-			/*if j == 0 {   //Remove this after test
-				fmt.Printf("\nInner For loop started\n")
-			} else if j == constants.N_BUTTONS - 2 {
-				fmt.Printf("\nInner For loop ended\n")
-			}*/
 			if e.Orders[i][j].State == types.OS_AcceptedOrder {
-				//fmt.Printf("\nsetOrdered will run\n")
+			/*if e.Orders[i][j].State != types.OS_NoOrder {
+				fmt.Printf("\nsetOrdered will run\n")*/
 				setOrdered(i, j, localelev_ID, true)
-				
 			}
 		}
 	}
@@ -366,7 +356,14 @@ func orderReassigner(faultyElevID string, operationError bool) {
 		} else if e.Floor == 0 && e.Direction == elevio.MD_Down {
 			setOrdered(1, elevio.BT_Cab, faultyElevID, true) //Todo use cab cal
 		} else {
-			var dummyOrder = UpcomingFloor(e)
+			if e.Direction == elevio.MD_Stop {
+				if e.Floor == 0 {
+					e.Direction = elevio.MD_Up
+				} else {
+					e.Direction = elevio.MD_Down
+				}
+			}
+			var dummyOrder = UpcomingFloor(e) //Forenkle denne?
 			setOrdered(dummyOrder, elevio.BT_Cab, faultyElevID, true) //Todo use cab cal
 		}
 	}
