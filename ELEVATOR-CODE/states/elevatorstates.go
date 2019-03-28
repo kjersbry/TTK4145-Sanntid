@@ -9,7 +9,7 @@ import (
 	"../lamps"
 	"../orders"
 	"../types"
-	"../merger"
+	//"../merger"
 )
 
 var all_elevators map[string]types.Elevator
@@ -59,7 +59,7 @@ func UpdateElevator(
 
 	for {
 		select {
-		case new_state := <-update_state:
+		case new_state := <- update_state:
 			setState(new_state, localelev_ID)
 			//types.PrintStates(all_elevators[localelev_ID])
 
@@ -75,17 +75,17 @@ func UpdateElevator(
 
 		case order := <- add_order:
 			setOrdered(order.Order.Floor, int(order.Order.Button), order.Elevator_ID, false)
-
+			
 			if order.Elevator_ID == localelev_ID {
 				order_added <- true
-				fmt.Printf("\nAssigned to self\n")
+				//fmt.Printf("\nassigned to self\n")
 				lamps.SetAllLamps(all_elevators[localelev_ID])
 			}
-		case <-clear_floor:
+		case <- clear_floor:
 			setOrderList(orders.ClearAtCurrentFloor(all_elevators[localelev_ID]), localelev_ID)
 			lamps.SetAllLamps(all_elevators[localelev_ID])
 
-		case received := <-elev_rx:
+		case received := <- elev_rx:
 			//fmt.Printf("\n\nrec: ID: %s\n", received.Elevator_ID)
 
 			if received.Elevator_ID == localelev_ID {
@@ -117,14 +117,14 @@ func UpdateElevator(
 			}
 
 			//update orders: Uncomment next two lines when merge is ready
-			order_map, is_new_local_order := merger.MergeOrders(localelev_ID, getOrderMap(all_elevators), received.Orders)
+			/*order_map, is_new_local_order := merger.MergeOrders(localelev_ID, getOrderMap(all_elevators), received.Orders)
 			setFromOrderMap(order_map)
 			if(is_new_local_order){
 				order_added <- true 
 				lamps.SetAllLamps(all_elevators[localelev_ID])
 				//fmt.Printf("\nAdded order\n")
 
-			}
+			}*/
 
 		case update := <-connectionUpdate: //Untested case
 			if update.Connected {

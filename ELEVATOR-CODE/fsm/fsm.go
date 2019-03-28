@@ -5,7 +5,7 @@ import (
 	"../orders"
 	"../states"
 	"../types"
-	//"fmt"
+	"fmt"
 )
 
 /*
@@ -48,7 +48,7 @@ func FSM(floor_reached <-chan bool, clear_floor chan<- int, order_added <-chan b
 }
 
 func onFloorArrival() bool {
-	//fmt.Printf("\nonFloorArrival\n")
+fmt.Printf("\nonFloorArrival\n")
 	elevio.SetFloorIndicator(states.ReadLocalElevator().Floor)
 
 	switch states.ReadLocalElevator().State {
@@ -66,7 +66,7 @@ func onFloorArrival() bool {
 }
 
 func onDoorTimeout() (types.ElevatorState, elevio.MotorDirection) {
-	//fmt.Printf("\nonDoorTimeout start\n")
+	fmt.Printf("\nonDoorTimeout start\n")
 
 	var dir elevio.MotorDirection
 	var state types.ElevatorState
@@ -87,7 +87,7 @@ func onDoorTimeout() (types.ElevatorState, elevio.MotorDirection) {
 }
 
 func onListUpdate() (types.ElevatorState, elevio.MotorDirection, bool) {
-	//fmt.Printf("\nonListUpdate\n")
+	fmt.Printf("\nonListUpdate\n")
 
 	state := states.ReadLocalElevator().State
 	dir := states.ReadLocalElevator().Direction

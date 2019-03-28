@@ -26,7 +26,7 @@ func IsOrder(e types.Elevator, floor int, button elevio.ButtonType) bool {
       return false
     } //todo: ta vekk! litt for quickfix
     
-    //return (e.Orders[floor][button].State != types.OS_NoOrder)
+    //return (e.Orders[floor][button].State != types.OS_NoOrder) //todo comment out
     if(button == elevio.BT_Cab){
         return (e.Orders[floor][button].State != types.OS_NoOrder)
     } else {
