@@ -8,7 +8,7 @@ import (
   "math"
   "strconv"
   "os/exec"
-  "os"
+ // "os"
 )
 /*Module for running a backup and primary process for any elevator algorithm elevFunc.
 elevFunc: the process that should be run in primary*/
@@ -40,7 +40,7 @@ func RunBackup(phx_port int, srv_port int, elevatorFunc RunElevFunc){
 }
 
 func backupHeartbeatReceiver(heartbeat_rx <-chan string, end_backup chan<- int){
-    local_ID := getPeerID()
+    local_ID := GetPeerID()
     last_time:= time.Now()
     for {
       select{
@@ -58,13 +58,13 @@ func backupHeartbeatReceiver(heartbeat_rx <-chan string, end_backup chan<- int){
     }
 }
 
-func getPeerID() string {
+func GetPeerID() string {
 	localIP, err := localip.LocalIP()
 	if err != nil {
 		fmt.Println(err)
 		localIP = "DISElevatorCONNECTED"
 	}
-	return fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
+	return fmt.Sprintf("peer-%s-%d", localIP/*, os.Getpid()*/)
 }
 
 /*******************PRIMARY FUNCS****************************/

@@ -16,6 +16,7 @@ import (
 	"./timer"
 	"./types"
 	"./operation"
+	"strconv"
 )
 
 /* TODO: sjekk om det er flere defaults på for{select{}} (men ikke fjern der det er select uten for)*/
@@ -37,7 +38,8 @@ func main() {
 	flag.Parse()
 
 	//assume that this is the backup process
-	phoenix.RunBackup(phoenix_port, server_port, runElevator)
+	//phoenix.RunBackup(phoenix_port, server_port, runElevator)
+	runElevator(phoenix.GetPeerID(), strconv.Itoa(server_port))
 }
 
 
