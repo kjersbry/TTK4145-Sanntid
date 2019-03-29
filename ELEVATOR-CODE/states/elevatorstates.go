@@ -150,7 +150,7 @@ func UpdateElevator(
 
 			if !update.Is_Operational && update.Elevator_ID != localelev_ID { 
 				fmt.Printf("\nID: %v has been marked as !operational\n", update.Elevator_ID)
-				is_new_local_order := orderReassigner(update.Elevator_ID, true)
+				is_new_local_order := orderReassigner(update.Elevator_ID, false)
 				if is_new_local_order {
 					order_added <- true
 				}
