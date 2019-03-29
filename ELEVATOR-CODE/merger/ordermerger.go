@@ -10,7 +10,7 @@ import (
 
 func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool, bool) { 
 	order_map, is_new_local_order, should_light := combineMaps(local_ID, local_elev, elev_2)
-	new_should_light := false
+	//new_should_light := false
 	//order_map, new_should_light = removeDuplicates(local_ID, order_map)
 	/*if should_light || new_should_light {
 		should_light = true
