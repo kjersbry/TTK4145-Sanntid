@@ -37,7 +37,7 @@ func main() {
 	flag.StringVar(&spawn_sim, "sim", "no", "set -sim=yes if you want to spawn simulator")
 	flag.Parse()
 
-	fmt.Printf("\nV1.2. RUNNING NEWEST VERSION OF FILE\n")
+	fmt.Printf("\nV1.3. RUNNING NETWORK TEST VERSION OF FILE\n")
 	//assume that this is the backup process
 	//phoenix.RunBackup(phoenix_port, server_port, runElevator)
 	runElevator(phoenix.GetPeerID(), strconv.Itoa(server_port))
@@ -79,12 +79,10 @@ func runElevator(local_ID string, server_port string) {
 	//Connections
 	operation_update := make(chan types.Operation_Event)   //Update elevator must use this <- Remember to update
 	connection_update := make(chan types.Connection_Event) //Update elevator must use this <- Remember to update
-	go peers.ConnectionObserver(33924, connection_update, local_ID)
-	go peers.ConnectionTransmitter(33924, local_ID)
 	go operation.OperationObserver(operation_update, local_ID)
-	go bcast.Transmitter(33922, elev_tx)
-	go bcast.Receiver(33922, elev_rx)
 
+	runNetworkStuff()
+		
 	//run
 	go elevio.PollButtons(drv_buttons)
 	go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx, elev_tx, connection_update, operation_update)
@@ -103,6 +101,23 @@ func runElevator(local_ID string, server_port string) {
 	for {
 		select {
 		case <-fin:
+		}
+	}
+}
+
+func runNetworkStuff() {
+	go peers.ConnectionObserver(33924, connection_update, local_ID)
+	go peers.ConnectionTransmitter(33924, local_ID)
+	go bcast.Transmitter(33922, elev_tx)
+	go bcast.Receiver(33922, elev_rx)
+
+	timeout_secs := 40
+	tick := time.NewTicker(time.Second*timeout_secs)
+
+	for {
+		select{
+		case <-tick.C:
+			return
 		}
 	}
 }
