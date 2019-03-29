@@ -129,12 +129,9 @@ func UpdateElevator(
 			}
 
 		case update := <-connectionUpdate: //Untested case
-			if update.Connected {
-				setConnected(true, update.Elevator_ID)
-				fmt.Printf("The elevator is reconnected: %v\n", all_elevators[update.Elevator_ID].Connected)
-			} else {
+				setConnected(update.Connected, update.Elevator_ID)
+			if !update.Connected {
 				
-				setConnected(false, update.Elevator_ID)
 				fmt.Printf("\n%v has been disconnected\n", update.Elevator_ID)
 
 				is_new_local_order := orderReassigner(update.Elevator_ID, false)
@@ -345,13 +342,13 @@ func setOrderList(list [constants.N_FLOORS][constants.N_BUTTONS]types.Order, ID 
 //Untested function
 //TODO: Move
 func orderReassigner(faultyElevID string, operationError bool) bool {
+	fmt.Printf("\nOrderReassigner was called\n")
 	var e = all_elevators[faultyElevID]
 	is_new_local_order := false
 	for i := 0; i < constants.N_FLOORS; i++ {
 		for j := 0; j < constants.N_BUTTONS-1; j++ {
 			if e.Orders[i][j].State == types.OS_AcceptedOrder {
-			/*if e.Orders[i][j].State != types.OS_NoOrder {
-				fmt.Printf("\nsetOrdered will run\n")*/
+				fmt.Printf("\nsetOrdered will run\n")
 				setOrdered(i, j, localelev_ID, true)
 				is_new_local_order = true
 			}
