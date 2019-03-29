@@ -162,7 +162,7 @@ func removeDuplicates(local_ID string, elev_orders map[string][constants.N_FLOOR
 							temp[j][k].State = types.OS_NoOrder
 							temp[j][k].Counter++
 							elev_orders[largest_id] = temp	
-							fmt.Printf("\ndeleted on ID %s\n", largestID)
+							fmt.Printf("\ndeleted on ID %s\n", largest_id)
 							//if(largest_id == local_ID){
 							should_light = true
 							//}
