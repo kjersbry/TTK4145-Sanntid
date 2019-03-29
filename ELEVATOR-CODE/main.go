@@ -80,8 +80,6 @@ func runElevator(local_ID string, server_port string) {
 	operation_update := make(chan types.Operation_Event)   //Update elevator must use this <- Remember to update
 	connection_update := make(chan types.Connection_Event) //Update elevator must use this <- Remember to update
 	go operation.OperationObserver(operation_update, local_ID)
-
-	runNetworkStuff()
 		
 	//run
 	go elevio.PollButtons(drv_buttons)
@@ -95,6 +93,7 @@ func runElevator(local_ID string, server_port string) {
 
 	//go states.TestPrintAllElevators()
 	//go states.PrintCabs()
+	runNetworkStuff()
 
 	/*Infinite loop: */
 	fin := make(chan int)
@@ -117,6 +116,7 @@ func runNetworkStuff() {
 	for {
 		select{
 		case <-tick.C:
+			fmt.Printf("\nNetwork terminated\n")
 			return
 		}
 	}
