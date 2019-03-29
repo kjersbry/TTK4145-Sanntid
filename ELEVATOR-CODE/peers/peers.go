@@ -44,6 +44,7 @@ func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event
 		n, _, _ := conn.ReadFrom(buf[0:])
 
 		id := string(buf[:n])
+		fmt.Printf("\nConn id: %s\n", id)
 
 		// Adding new connection
 
