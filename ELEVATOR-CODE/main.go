@@ -37,7 +37,7 @@ func main() {
 	flag.StringVar(&spawn_sim, "sim", "no", "set -sim=yes if you want to spawn simulator")
 	flag.Parse()
 
-	fmt.Printf("\nRUNNING NEWEST VERSION OF FILE\n")
+	fmt.Printf("\nV1.2. RUNNING NEWEST VERSION OF FILE\n")
 	//assume that this is the backup process
 	//phoenix.RunBackup(phoenix_port, server_port, runElevator)
 	runElevator(phoenix.GetPeerID(), strconv.Itoa(server_port))
