@@ -41,8 +41,8 @@ func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event
 		conn.SetReadDeadline(time.Now().Add(interval))
 		n, _, _ := conn.ReadFrom(buf[0:])
 
-		/*id := string(buf[:n])
-		if len(id) > 18 {
+		id := string(buf[:n])
+		/*if len(id) > 18 {
 			id = id[:18]
 		}*/
 		//fmt.Printf("\nConn id: %s\n", id)
