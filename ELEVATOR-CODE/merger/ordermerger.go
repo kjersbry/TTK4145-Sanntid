@@ -155,7 +155,7 @@ func removeDuplicates(local_ID string, elev_orders map[string][constants.N_FLOOR
 						
 						s1:=elev_orders[elevator_1][j][k].State
 						s2:=elev_orders[elevator_2][j][k].State
-						if (!(s1==types.OS_NoOrder))&&(!(s2==types.OS_NoOrder)){
+						if (!(s1==types.OS_NoOrder))&&(!(s2==types.OS_NoOrder)) && (elevator_1 != elevator_2){
 							
 							largest_id:= largestID(elevator_1, elevator_2)
 							temp := elev_orders[largest_id]
