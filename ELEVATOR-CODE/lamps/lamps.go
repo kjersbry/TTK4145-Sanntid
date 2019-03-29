@@ -15,7 +15,7 @@ func SetAllLamps(local_ID string, elevators map[string]types.Elevator){
 		for j:= 0; j < constants.N_BUTTONS - 1 ; j++ {
 			is_some_hallcall := false
 			for key, val := range elevators {
-				if orders.IsOrder(val, i, elevio.ButtonType(j)) {
+				if orders.IsOrder(val, i, elevio.ButtonType(j)) && val.IsOperational {
 					//fmt.Printf("\nSet light fl. %d, b %d\n", i, j)
 					is_some_hallcall = true
 				} 

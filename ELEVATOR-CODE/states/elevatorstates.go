@@ -129,7 +129,7 @@ func UpdateElevator(
 			}
 
 		case update := <-connectionUpdate: //Untested case
-				setConnected(update.Connected, update.Elevator_ID)
+			setConnected(update.Connected, update.Elevator_ID)
 			if !update.Connected {
 				
 				fmt.Printf("\n%v has been disconnected\n", update.Elevator_ID)
