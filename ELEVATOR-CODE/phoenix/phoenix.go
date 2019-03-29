@@ -64,7 +64,7 @@ func GetPeerID() string {
 		fmt.Println(err)
 		localIP = "DISElevatorCONNECTED"
 	}
-	return fmt.Sprintf("peer-%s-%d", localIP/*, os.Getpid()*/)
+	return fmt.Sprintf("peer-%s", localIP/*, os.Getpid()*/)
 }
 
 /*******************PRIMARY FUNCS****************************/

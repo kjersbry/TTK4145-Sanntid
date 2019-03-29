@@ -30,7 +30,6 @@ func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event
 
 	//Todo if time: Check if the dissconncted elevator is reconnected instantly. If so, don't reassign.
 
-
 	var buf [1024]byte
 	var lostConnections []string
 	var update types.Connection_Event
@@ -39,14 +38,13 @@ func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event
 	conn := conn.DialBroadcastUDP(port)
 
 	for {
-
 		conn.SetReadDeadline(time.Now().Add(interval))
 		n, _, _ := conn.ReadFrom(buf[0:])
 
-		id := string(buf[:n])
+		/*id := string(buf[:n])
 		if len(id) > 18 {
 			id = id[:18]
-		}
+		}*/
 		//fmt.Printf("\nConn id: %s\n", id)
 		// Adding new connection
 
