@@ -32,6 +32,7 @@ func InitElevators(local_ID string, drv_floors <-chan int) {
 	setOperational(true, localelev_ID)
 	setConnected(true, localelev_ID)
 	lamps.SetAllLamps(localelev_ID, all_elevators)
+	elevio.SetDoorOpenLamp(false)
 	//wait to allow floor signal to arrive if we start on a floor
 	time.Sleep(time.Millisecond * 50)
 	select {

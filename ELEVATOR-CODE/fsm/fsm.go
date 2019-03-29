@@ -111,9 +111,9 @@ func onListUpdate() (types.ElevatorState, elevio.MotorDirection, bool) {
 			start_timer = true
 			state = types.ES_DoorOpen
 		} else {
-			fmt.Printf("\nExecuting ChooseDirection\n")
+			//fmt.Printf("\nExecuting ChooseDirection\n")
 			dir = orders.ChooseDirection(e)
-			fmt.Printf("\nFinished ChooseDirection\n")
+			//fmt.Printf("\nFinished ChooseDirection\n")
 			elevio.SetMotorDirection(dir)
 			fmt.Printf("\nDir was set to: %s\n", types.DirToString(dir))
 			state = types.ES_Moving
@@ -122,6 +122,7 @@ func onListUpdate() (types.ElevatorState, elevio.MotorDirection, bool) {
 	/*this should not happen, but need to avoid getting 
 		stuck if there's a bug in listupdatesignalling somewhere:*/
 	if dir == elevio.MD_Stop && state == types.ES_Moving {
+		fmt.Print("\nOBSOBS: fsm:125: this should not happen\n") //todo comment out
 		if e.Floor == constants.N_FLOORS {
 			dir = elevio.MD_Down
 		} else {
