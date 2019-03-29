@@ -44,8 +44,8 @@ func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event
 		n, _, _ := conn.ReadFrom(buf[0:])
 
 		id := string(buf[:n])
-		if len(id) > 0 && len(id) >= 18 {
-			id = id[:17]
+		if len(id) > 18 {
+			id = id[:18]
 		}
 		fmt.Printf("\nConn id: %s\n", id)
 		// Adding new connection
