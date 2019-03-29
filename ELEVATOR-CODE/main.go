@@ -93,7 +93,7 @@ func runElevator(local_ID string, server_port string) {
 
 	//go states.TestPrintAllElevators()
 	//go states.PrintCabs()
-	runNetworkStuff()
+	runNetworkStuff(local_ID, connection_update, elev_rx, elev_tx)
 
 	/*Infinite loop: */
 	fin := make(chan int)
@@ -104,13 +104,13 @@ func runElevator(local_ID string, server_port string) {
 	}
 }
 
-func runNetworkStuff() {
+func runNetworkStuff(local_ID string, connection_update chan types.Connection_Event, elev_rx chan types.Wrapped_Elevator, elev_tx chan types.Wrapped_Elevator) {
 	go peers.ConnectionObserver(33924, connection_update, local_ID)
 	go peers.ConnectionTransmitter(33924, local_ID)
 	go bcast.Transmitter(33922, elev_tx)
 	go bcast.Receiver(33922, elev_rx)
 
-	timeout_secs := 40
+	const timeout_secs = 15
 	tick := time.NewTicker(time.Second*timeout_secs)
 
 	for {
