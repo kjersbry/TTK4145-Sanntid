@@ -47,7 +47,7 @@ func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event
 		if len(id) > 18 {
 			id = id[:18]
 		}
-		fmt.Printf("\nConn id: %s\n", id)
+		//fmt.Printf("\nConn id: %s\n", id)
 		// Adding new connection
 
 		if (id != "") && (id != localID) {
