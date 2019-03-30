@@ -32,7 +32,7 @@ func FSM(floorReached <-chan bool, clearFloor chan<- int, orderAdded <-chan bool
 			}
 
 		case <-orderAdded:
-			state, dir, start_timer := onListUpdate()
+			state, dir, startTimer := onListUpdate()
 			if startTimer {
 				clearFloor <- states.ReadLocalElevator().Floor
 			}
@@ -94,12 +94,12 @@ func onListUpdate() (types.ElevatorState, elevio.MotorDirection, bool) {
 	state := e.State
 	fmt.Printf("Current state: %s\n", types.StateToString(state))
 	dir := e.Direction
-	start_timer := false
+	startTimer := false
 
 	switch state {
 	case types.ES_DoorOpen:
 		//if(states.ReadLocalElevator().Floor == floor){ previous version
-		if orders.IsOrderCurrentFloor(states.ReadLocalElevator()) {
+		if orders.IsOrderCurrentFloor(e) {
 			startTimer = true
 		}
 

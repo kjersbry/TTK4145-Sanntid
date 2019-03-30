@@ -17,25 +17,19 @@ func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][con
 	return order_map, is_new_local_order, should_light
 }
 
-func getPresedence(order_1 types.Order, order_2 types.Order) types.Order {
-	if order_2.Counter > order_1.Counter {
-		return order_2
+func getPresedence(order1 types.Order, order2 types.Order) types.Order {
+	if order2.Counter > order1.Counter {
+		return order2
 	} else {
-		return order_1
+		return order1
 	}
 }
 
-func largestID(elev_1 string, elev_2 string) string {
-	/*short_1 := []rune(elev_1)
-	short_2 := []rune(elev_2)
-	short_1 = strings.Replace(short_1, "-", "", -1)
-	short_1 = strings.Replace(short_1,"peer","")
-	short_2 = strings.Replace(short_2, "-", "", -1)
-	short_2 = strings.Replace(short_2,"peer","")*/
-	if elev_1 > elev_2 {
-		return elev_1
+func largestID(elev1 string, elev2 string) string {
+	if elev1 > elev2 {
+		return elev1
 	}
-	return elev_2
+	return elev2
 }
 func MaxState(s1 types.OrderState, s2 types.OrderState) types.OrderState{
 	if s2 > s1 {
@@ -59,8 +53,8 @@ func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][cons
 			if keyExists {
 			for i:= range val {
 				for j:=range val[i]{
-					s1 := temp_local[i][j].State
-					s1_was := s1
+					s1 := tempLocal[i][j].State
+					s1Was := s1
 					s2 := temp[i][j].State
 					if j == constants.N_BUTTONS - 1 {
 						//cab call
@@ -130,8 +124,8 @@ func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][cons
 					}
 				}
 				}
-				map_2[key] = temp
-				local_map[key] = temp_local
+				map2[key] = temp
+				localMap[key] = tempLocal
 			}
 		}
 		
@@ -175,6 +169,7 @@ func removeDuplicates(local_ID string, elev_orders map[string][constants.N_FLOOR
 	}
 	return elev_orders, should_light
 }
+
 	
 
 	
