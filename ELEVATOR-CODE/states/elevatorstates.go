@@ -9,7 +9,6 @@ import (
 	"../lamps"
 	"../orders"
 	"../types"
-	"../merger"
 )
 
 var all_elevators map[string]types.Elevator //todo
@@ -99,7 +98,7 @@ func UpdateElevator(
 			}
 
 			//Update orders
-			orderMap, isNewLocalOrder, shouldLight := merger.MergeOrders(localelev_ID, getOrderMap(all_elevators), received.Orders)
+			orderMap, isNewLocalOrder, shouldLight := orders.MergeOrders(localelev_ID, getOrderMap(all_elevators), received.Orders)
 			setFromOrderMap(orderMap)
 			if(isNewLocalOrder){
 				localOrderAdded <- true 
@@ -113,7 +112,8 @@ func UpdateElevator(
 			if !update.Connected {
 				fmt.Printf("\n%v has been disconnected\n", update.Elevator_ID)
 
-				isNewLocalOrder := orderReassigner(update.Elevator_ID)
+				elev, isNewLocalOrder := orders.OrderReassigner(update.Elevator_ID, localelev_ID, all_elevators)
+				setOrderList(elev.Orders, localelev_ID)
 				if isNewLocalOrder {
 					localOrderAdded <- true
 				}
@@ -125,7 +125,8 @@ func UpdateElevator(
 
 			if !update.Is_Operational && update.Elevator_ID != localelev_ID { 
 				fmt.Printf("\nID: %v has been marked as not operational\n", update.Elevator_ID)
-				isNewLocalOrder := orderReassigner(update.Elevator_ID)
+				elev, isNewLocalOrder := orders.OrderReassigner(update.Elevator_ID, localelev_ID, all_elevators)
+				setOrderList(elev.Orders, localelev_ID)
 				if isNewLocalOrder {
 					localOrderAdded <- true
 				}
@@ -267,40 +268,4 @@ func setOrderList(list [constants.N_FLOORS][constants.N_BUTTONS]types.Order, ID 
 		temp.Orders = list
 		all_elevators[ID] = temp
 	}
-}
-
-//TODO: Move
-func orderReassigner(faultyElevID string) bool {
-	var e = all_elevators[faultyElevID]
-	isNewLocalOrder := false
-	for i := 0; i < constants.N_FLOORS; i++ {
-		for j := 0; j < constants.N_BUTTONS-1; j++ {
-			if e.Orders[i][j].State == types.OS_AcceptedOrder {
-				setOrdered(i, j, localelev_ID, true)
-				isNewLocalOrder = true
-			}
-		}
-	}
-	return isNewLocalOrder
-}
-
-func UpcomingFloor(e types.Elevator) int {
-	if e.Direction == elevio.MD_Up {
-		return e.Floor + 1
-	} else if e.Direction == elevio.MD_Down {
-		return e.Floor - 1
-	} else {
-		return e.Floor
-	}
-}
-
-//Returns a slice of the working elevators
-func WorkingElevs( /*elevs map[string]types.Elevator  <- upgrade*/ ) []types.Elevator{
-	var workingElevs []types.Elevator
-	for _, v := range all_elevators { //change to elevs when you move variables
-		if v.Is_Operational && v.Connected {
-			workingElevs = append(workingElevs, v)
-		}
-	}
-	return workingElevs
 }

@@ -18,3 +18,12 @@ func LocalIP() (string, error) {
 	}
 	return localIP, nil
 }
+
+func GetPeerID() string {
+	localIP, err := LocalIP()
+	if err != nil {
+		fmt.Println(err)
+		localIP = "DISElevatorCONNECTED"
+	}
+	return fmt.Sprintf("peer-%s", localIP)
+}

@@ -1,4 +1,4 @@
-package merger
+package orders
 
 import (
 	 "../constants"

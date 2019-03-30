@@ -9,7 +9,7 @@ import (
 	"./constants"
 	"./elevio"
 	"./fsm"
-	"./orderassigner"
+	"./orders"
 	"./peers"
 	"./states"
 	"./timer"
@@ -20,49 +20,20 @@ import (
 	"os/exec"
 )
 
-/* TODO: sjekk om det er flere defaults på for{select{}} (men ikke fjern der det er select uten for)*/
-/*Possible todo: hva hvis servern skrus av, ser ut som at den bare fortsetter å kjøre da. Bør den 
-gjøre noe annet enn reassign?*/
-const default_sport int = 15657
-const default_pport int = 1234
-
-var sport_suggestions = [6]int{default_sport, 59334, 46342, 33922, 50945, 36732}
-var pport_suggestions = [6]int{default_pport, 1235, 1236, 1237, 1238, 1239}
-var spawn_sim string
-var server_port int
-var phoenix_port int
+/*Simulator port suggestions:
+15657, 59334, 46342, 33922, 50945, 36732*/
 
 func main() {
-	flag.IntVar(&server_port, "sport", default_sport, "port for the elevator server")
-	flag.IntVar(&phoenix_port, "pport", default_pport, "port for phoenix")
+	var spawn_sim string
+	var server_port string
+
+	flag.IntVar(&server_port, "sport", "15657", "port for the elevator server")
 	flag.StringVar(&spawn_sim, "sim", "no", "set -sim=yes if you want to spawn simulator")
 	flag.Parse()
 
-	fmt.Printf("\nV1.2. RUNNING NEWEST VERSION OF FILE\n")
-	//assume that this is the backup process
-	//phoenix.RunBackup(phoenix_port, server_port, runElevator)
-	runElevator(GetPeerID(), strconv.Itoa(server_port))
-}
-
-//todo:
-func GetPeerID() string {
-	localIP, err := localip.LocalIP()
-	if err != nil {
-		fmt.Println(err)
-		localIP = "DISElevatorCONNECTED"
-	}
-	return fmt.Sprintf("peer-%s", localIP/*, os.Getpid()*/)
-}
-
-func SpawnTerminal(arg string) error {
-	newProcess := exec.Command("gnome-terminal", "-x", "sh", "-c", arg)
-	err := newProcess.Run()
-	return err
-}
-
-func runElevator(local_ID string, server_port string) {
 	if spawn_sim == "yes" {
-		err := SpawnTerminal("./SimElevatorServer --port " + server_port)
+		newProcess := exec.Command("gnome-terminal", "-x", "sh", "-c", "./SimElevatorServer --port " + server_port)
+		err := newProcess.Run()
 		if err != nil {
 			fmt.Printf("\nCould not spawn simulator\n")
 			return
@@ -71,17 +42,18 @@ func runElevator(local_ID string, server_port string) {
 	}
 
 	//initialization
-	elevio.Init("localhost:"+server_port, constants.N_FLOORS)
+	local_ID := localip.GetPeerID()
+	elevio.Init("localhost:" + server_port, constants.N_FLOORS)
 	drv_buttons := make(chan elevio.ButtonEvent)
 	drv_floors := make(chan int)
-	order_added := make(chan bool)              //for informing FSM about order update
-	add_order := make(chan types.AssignedOrder) //send orders from assigner to orders
+	order_added := make(chan bool)
+	add_order := make(chan types.AssignedOrder) 
 	door_timeout := make(chan bool)
 	start_door_timer := make(chan bool)
 	floor_reached := make(chan bool)
 
 	//Server channels
-	clear_floor := make(chan int) //FSM tells order to clear order
+	clear_floor := make(chan int)
 	update_state := make(chan types.ElevatorState)
 	update_floor := make(chan int)
 	update_direction := make(chan elevio.MotorDirection)
@@ -93,8 +65,8 @@ func runElevator(local_ID string, server_port string) {
 	states.InitElevators(local_ID, drv_floors)
 
 	//Connections
-	operation_update := make(chan types.Operation_Event)   //Update elevator must use this <- Remember to update
-	connection_update := make(chan types.Connection_Event) //Update elevator must use this <- Remember to update
+	operation_update := make(chan types.Operation_Event)  
+	connection_update := make(chan types.Connection_Event) 
 	go peers.ConnectionObserver(33924, connection_update, local_ID)
 	go peers.ConnectionTransmitter(33924, local_ID)
 	go operation.OperationObserver(operation_update, local_ID)
@@ -105,13 +77,8 @@ func runElevator(local_ID string, server_port string) {
 	go elevio.PollButtons(drv_buttons)
 	go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx, elev_tx, connection_update, operation_update)
 	go fsm.FSM(floor_reached, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction)
-	go orderassigner.AssignOrder(drv_buttons, add_order, local_ID)
+	go orders.AssignOrder(drv_buttons, add_order, local_ID)
 	go timer.DoorTimer(start_door_timer, door_timeout)
-
-	//go states.TestPeersPrint()  
-
-	//go states.TestPrintAllElevators()
-	//go states.PrintCabs()
 
 	/*Infinite loop: */
 	fin := make(chan int)
