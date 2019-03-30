@@ -6,7 +6,6 @@ import (
 
 	"../constants"
 	"../elevio"
-	//"time"
 )
 
 type ElevatorState int
@@ -26,13 +25,11 @@ const (
 )
 
 type Order struct {
-	//litt midlertidig oppsett, hvordan skal denne være?
 	Counter int64
 	State   OrderState
-	//Timestamp time.Time
 }
 
-type AssignedOrder struct { //Used by orderassigner.AssignOrder
+type AssignedOrder struct { 
 	Elevator_ID string
 	Order       elevio.ButtonEvent
 }
@@ -53,7 +50,6 @@ type Wrapped_Elevator struct {
 	Floor       int
 	Direction   elevio.MotorDirection //does only change to stop when IDLE, not when stopping for order
 	Orders      map[string][constants.N_FLOORS][constants.N_BUTTONS]Order
-	//Is_Operational bool
 }
 
 type Operation_Event struct {

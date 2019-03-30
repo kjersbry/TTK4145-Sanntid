@@ -3,30 +3,17 @@ import (
     "../elevio"
     "../types"
     "../constants"
-    "fmt"
 )
 
 func ClearAtCurrentFloor(e types.Elevator) [constants.N_FLOORS][constants.N_BUTTONS]types.Order {
-    if(e.Floor < 0 || e.Floor > 3){
-      fmt.Printf("\nclear: out of range %d \n", e.Floor)
-      return e.Orders
-    } //todo: ta vekk! litt for quickfix
-
     for i := 0; i < constants.N_BUTTONS; i++ {
         e.Orders[e.Floor][i].State = types.OS_NoOrder
         e.Orders[e.Floor][i].Counter++
     }
-
     return e.Orders
 }
 
 func IsOrder(e types.Elevator, floor int, button elevio.ButtonType) bool {
-    if(floor < 0 || floor > 3){
-      fmt.Printf("\nIs: out of range %d \n", floor)
-      return false
-    } //todo: ta vekk! litt for quickfix
-    
-    //return (e.Orders[floor][button].State != types.OS_NoOrder) //todo comment out
     if(button == elevio.BT_Cab){
         return (e.Orders[floor][button].State != types.OS_NoOrder)
     } else {
@@ -84,8 +71,6 @@ func ShouldStop(e types.Elevator) bool {
 
 
 func ChooseDirection(e types.Elevator) elevio.MotorDirection {
-	// husk på å teste at heisen ikke kan kjøres fast hvis noen vil være kjipe
-
 	switch(e.Direction){
     case elevio.MD_Up:
         if isOrderAbove(e) {
@@ -97,7 +82,7 @@ func ChooseDirection(e types.Elevator) elevio.MotorDirection {
         }
     case elevio.MD_Down:
         fallthrough
-    case elevio.MD_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
+    case elevio.MD_Stop:
         if  isOrderBelow(e) {
             return elevio.MD_Down
         } else if isOrderAbove(e) {

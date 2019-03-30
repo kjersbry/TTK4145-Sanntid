@@ -3,18 +3,73 @@ package merger
 import (
 	 "../constants"
 	 "../types"
-	 "fmt"
+	 "../elevio"
+	 "math"
 )
 
+func MergeOrders(localID string, localMap map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order,
+	 otherMap map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool, bool) {
+		
+		isNewLocalOrder := false
+		shouldLight := false
 
-func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool, bool) { 
-	order_map, is_new_local_order, should_light := combineMaps(local_ID, local_elev, elev_2)
-	//new_should_light := false
-	//order_map, new_should_light = removeDuplicates(local_ID, order_map)
-	/*if should_light || new_should_light {
-		should_light = true
-	}*/
-	return order_map, is_new_local_order, should_light
+		for key, val := range localMap {
+			temp, keyExists := otherMap[key]
+			tempLocal := val
+
+			if keyExists {
+			for i := range val {
+				for j := range val[i]{
+					localState := tempLocal[i][j].State
+					localStateWas := localState
+					otherState := temp[i][j].State
+
+					localCounter := tempLocal[i][j].Counter
+					otherCounter := temp[i][j].Counter
+
+					if j == elevio.BT_Cab {
+						if localCounter == otherCounter {
+							if localState != types.OS_NoOrder || otherState != types.OS_NoOrder {
+								localState = types.OS_UnacceptedOrder
+							}
+						} else if otherCounter > localCounter {
+							localState = otherState
+						} 
+
+					} else if localCounter == otherCounter { 
+						switch {
+						case (localState == types.OS_UnacceptedOrder && otherState == types.OS_UnacceptedOrder):
+							localState = types.OS_AcceptedOrder
+						case math.Abs(float64(localState - otherState)) == 2:
+							localState = types.OS_AcceptedOrder
+						default :
+							localState = MaxState(localState, otherState)
+						}	
+					} else {
+						presedence := getPresedence(tempLocal[i][j], temp[i][j])
+						localState = presedence.State
+					}
+					tempLocal[i][j].State = localState
+
+					presedence := getPresedence(tempLocal[i][j], temp[i][j])
+					tempLocal[i][j].Counter = presedence.Counter
+
+					//Check if FSM should get local-orders-updated-signal
+					if localState != localStateWas {
+						shouldLight = true
+						if key == localID {
+							if (localState == types.OS_AcceptedOrder) || ((j == constants.N_BUTTONS - 1) && localState != types.OS_NoOrder) {
+								isNewLocalOrder = true
+							}
+						}
+					}
+					}
+				}
+				localMap[key] = tempLocal
+			}
+		}
+		
+	return localMap, isNewLocalOrder, shouldLight
 }
 
 func getPresedence(order1 types.Order, order2 types.Order) types.Order {
@@ -31,146 +86,9 @@ func largestID(elev1 string, elev2 string) string {
 	}
 	return elev2
 }
-func MaxState(s1 types.OrderState, s2 types.OrderState) types.OrderState{
-	if s2 > s1 {
-		return s2
+func MaxState(state1 types.OrderState, state2 types.OrderState) types.OrderState{
+	if state2 > state1 {
+		return state2
 	}
-	return s1
+	return state1
 }
-
-
-
-func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order,
-	 map_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool, bool) { //returntype
-		
-		is_new_local_order := false
-		should_light := false
-
-		for key, val:= range local_map {
-			temp, keyExists := map_2[key]
-			temp_local := val
-
-			if keyExists {
-			for i:= range val {
-				for j:=range val[i]{
-					s1 := tempLocal[i][j].State
-					s1Was := s1
-					s2 := temp[i][j].State
-					if j == constants.N_BUTTONS - 1 {
-						//cab call
-						//hva hvis den krasjer etter første cab call på den flooren?
-						//ctr equal: choose local
-						o1 := temp_local[i][j]
-						o2 := temp[i][j]
-
-						if o1.Counter == o2.Counter {
-							if o1.State != types.OS_NoOrder || o2.State != types.OS_NoOrder {
-								//o1.State = types.OS_UnacceptedOrder
-								//o2.State = types.OS_UnacceptedOrder
-								s1 = types.OS_UnacceptedOrder
-								s2 = types.OS_UnacceptedOrder
-							} //else, forbli no order
-						} else if o2.Counter > o1.Counter {
-							//o1.State = o2.State
-							s1 = s2
-							//fmt.Printf("\no2\n")
-						} /*else if o1.Counter > o2.counter {
-							choose o1
-							o1 har presedens
-						}*/
-						
-						s2 = s1
-						temp[i][j].Counter = temp_local[i][j].Counter
-						//temp_local[i][j].State = s1
-						//temp[i][j].State = s2
-
-					} else if temp_local[i][j].Counter == temp[i][j].Counter { 
-						switch {
-						case (s1==types.OS_UnacceptedOrder && s2==types.OS_UnacceptedOrder):
-							s1 = types.OS_AcceptedOrder
-							s2 = s1
-							break
-						case ((s1-s2==2) || (s2-s1==2)):
-							s1 = types.OS_AcceptedOrder
-							s2 = s1
-							break
-						default :
-							s1= MaxState(s1,s2)
-							s2=s1
-							break
-							}	
-						//temp_local[i][j].State=s1
-						//temp[i][j].State=s2
-					} else {
-						presedence:=getPresedence(temp_local[i][j],temp[i][j])
-						s1 = presedence.State
-						s2 = presedence.State
-					}
-					temp_local[i][j].State = s1
-					temp[i][j].State = s2
-
-					presedence := getPresedence(temp_local[i][j], temp[i][j])
-					temp_local[i][j].Counter = presedence.Counter
-					temp[i][j].Counter = presedence.Counter
-
-					//Check if FSM should get local orders updated-signal
-					if s1 != s1_was {
-						should_light = true
-						if key == local_ID {
-							if (s1 == types.OS_AcceptedOrder) || ((j == constants.N_BUTTONS - 1) && s1 != types.OS_NoOrder) {
-								is_new_local_order = true
-							}
-						}
-					}
-				}
-				}
-				map2[key] = temp
-				localMap[key] = tempLocal
-			}
-		}
-		
-	return local_map, is_new_local_order, should_light
-}
-
-func removeDuplicates(local_ID string, elev_orders map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool) {//returntype
-	var tmp_list []string;
-	should_light := false
-
-	for id, _ := range elev_orders{
-		tmp_list = append(tmp_list, id)
-	}
-	for h:= 0; h < len(tmp_list); h++{
-		elevator_1 := tmp_list[h]
-		for i := h+1; i < len(tmp_list); i++ {
-			elevator_2 := tmp_list[i]
-			for j := 0; j < constants.N_FLOORS; j++ {
-					for k := 0; k < constants.N_BUTTONS-1; k++ {
-						
-						s1:=elev_orders[elevator_1][j][k].State
-						s2:=elev_orders[elevator_2][j][k].State
-						if (!(s1==types.OS_NoOrder))&&(!(s2==types.OS_NoOrder)) && (elevator_1 != elevator_2){
-							
-							largest_id:= largestID(elevator_1, elevator_2)
-							temp := elev_orders[largest_id]
-							temp[j][k].State = types.OS_NoOrder
-							temp[j][k].Counter++
-							elev_orders[largest_id] = temp	
-							fmt.Printf("\ndeleted on ID %s\n", largest_id)
-							//if(largest_id == local_ID){
-							should_light = true
-							//}
-						}
-					}
-					
-				}
-			}
-
-		
-	}
-	return elev_orders, should_light
-}
-
-	
-
-	
-	

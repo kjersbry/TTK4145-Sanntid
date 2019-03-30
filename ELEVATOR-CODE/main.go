@@ -5,18 +5,19 @@ import (
 	"fmt"
 	"time"
 
-	"./bcast" //This will probably be changed
+	"./bcast"
 	"./constants"
 	"./elevio"
 	"./fsm"
 	"./orderassigner"
 	"./peers"
-	"./phoenix"
 	"./states"
 	"./timer"
 	"./types"
 	"./operation"
+	"./localip"
 	"strconv"
+	"os/exec"
 )
 
 /* TODO: sjekk om det er flere defaults på for{select{}} (men ikke fjern der det er select uten for)*/
@@ -40,13 +41,28 @@ func main() {
 	fmt.Printf("\nV1.2. RUNNING NEWEST VERSION OF FILE\n")
 	//assume that this is the backup process
 	//phoenix.RunBackup(phoenix_port, server_port, runElevator)
-	runElevator(phoenix.GetPeerID(), strconv.Itoa(server_port))
+	runElevator(GetPeerID(), strconv.Itoa(server_port))
 }
 
+//todo:
+func GetPeerID() string {
+	localIP, err := localip.LocalIP()
+	if err != nil {
+		fmt.Println(err)
+		localIP = "DISElevatorCONNECTED"
+	}
+	return fmt.Sprintf("peer-%s", localIP/*, os.Getpid()*/)
+}
+
+func SpawnTerminal(arg string) error {
+	newProcess := exec.Command("gnome-terminal", "-x", "sh", "-c", arg)
+	err := newProcess.Run()
+	return err
+}
 
 func runElevator(local_ID string, server_port string) {
 	if spawn_sim == "yes" {
-		err := phoenix.SpawnTerminal("./SimElevatorServer --port " + server_port)
+		err := SpawnTerminal("./SimElevatorServer --port " + server_port)
 		if err != nil {
 			fmt.Printf("\nCould not spawn simulator\n")
 			return
@@ -91,7 +107,6 @@ func runElevator(local_ID string, server_port string) {
 	go fsm.FSM(floor_reached, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction)
 	go orderassigner.AssignOrder(drv_buttons, add_order, local_ID)
 	go timer.DoorTimer(start_door_timer, door_timeout)
-	//go states.TransmitElev(elev_tx)
 
 	//go states.TestPeersPrint()  
 

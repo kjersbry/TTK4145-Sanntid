@@ -1,28 +1,25 @@
 package timer
 
 import (
-	"time"
 	"../constants"
-	"fmt"
+	"time"
 )
 
-func DoorTimer(start <-chan bool, door_timeout chan<- bool){
-	is_active := false
+func DoorTimer(start <-chan bool, doorTimeout chan<- bool){
+	isActive := false
 	timestamp:= time.Now()
 	tick := time.NewTicker(time.Millisecond*7)
 	for{
 		select{
-		case should_start :=<- start:
-			if(should_start){
+		case shouldStart :=<- start:
+			if(shouldStart){
 				timestamp = time.Now()
-				is_active = true
-				fmt.Printf("\nTimer started!\n")
+				isActive = true
 			}
 		case <- tick.C:
-			if is_active && (time.Now().Sub(timestamp) > time.Second*constants.DOOR_OPEN_SEC)  {
-				door_timeout <- true
-				is_active = false
-				fmt.Printf("\nTimer ended!\n")
+			if isActive && (time.Now().Sub(timestamp) > time.Second*constants.DOOR_OPEN_SEC)  {
+				doorTimeout <- true
+				isActive = false
 			}
 		}
 	}
