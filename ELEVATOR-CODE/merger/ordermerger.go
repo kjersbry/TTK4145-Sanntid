@@ -3,7 +3,6 @@ package merger
 import (
 	 "../constants"
 	 "../types"
-	 //"reflect"
 	 "fmt"
 )
 
