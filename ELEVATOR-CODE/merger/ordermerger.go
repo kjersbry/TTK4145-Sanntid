@@ -7,37 +7,28 @@ import (
 	 //"fmt"
 )
 
-/*TODO!!!!!:
-- test uten duplikat
-- slukke lys ved sletting fra duplikat*/
-//er counter alltid riktig?
 
-func MergeOrders(local_ID string, local_elev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool) { 
-	order_map, is_new_local_order := combineMaps(local_ID, local_elev, elev_2)
-	order_map = removeDuplicates(order_map)
-	return order_map, is_new_local_order
+
+func MergeOrders(localID string, localElev map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, elev2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool) { 
+	orderMmap, isNewLocalOrder := combineMaps(localID, localElev, elev2)
+	orderMap = removeDuplicates(orderMap)
+	return orderMap, isNewLocalOrder
 }
 
-func getPresedence(order_1 types.Order, order_2 types.Order) types.Order {
-	if order_2.Counter > order_1.Counter {
-		return order_2
+func getPresedence(order1 types.Order, order2 types.Order) types.Order {
+	if order2.Counter > order1.Counter {
+		return order2
 	} else {
-		return order_1
+		return order1
 	}
 
 }
 
-func largestID(elev_1 string, elev_2 string) string {
-	/*short_1 := []rune(elev_1)
-	short_2 := []rune(elev_2)
-	short_1 = strings.Replace(short_1, "-", "", -1)
-	short_1 = strings.Replace(short_1,"peer","")
-	short_2 = strings.Replace(short_2, "-", "", -1)
-	short_2 = strings.Replace(short_2,"peer","")*/
-	if elev_1 > elev_2 {
-		return elev_1
+func largestID(elev1 string, elev2 string) string {
+	if elev1 > elev2 {
+		return elev1
 	}
-	return elev_2
+	return elev2
 }
 func MaxState(s1 types.OrderState, s2 types.OrderState) types.OrderState{
 	if s2>s1 {
@@ -48,25 +39,25 @@ func MaxState(s1 types.OrderState, s2 types.OrderState) types.OrderState{
 
 
 
-func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order,
-	 map_2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool) { //returntype
+func combineMaps(localID string, localMap map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order,
+	 map2 map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) (map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order, bool) { //returntype
 		
-		is_new_local_order := false
+		isNewLocalOrder := false
 		
-		for key, val:= range local_map {
-			temp, keyExists := map_2[key]
-			temp_local := val
+		for key, val:= range localMap {
+			temp, keyExists := map2[key]
+			tempLocal := val
 
 			if keyExists {
 			for i:= range val {
 				for j:=range val[i]{
-					s1 := temp_local[i][j].State
-					s1_was := s1
+					s1 := tempLocal[i][j].State
+					s1Was := s1
 					s2 := temp[i][j].State
 					if j==constants.N_BUTTONS-1 { //antar 0 indeksering, identifiserer cab call
 						s2 = s1
-						temp[i][j].Counter = temp_local[i][j].Counter
-					} else if temp_local[i][j].Counter == temp[i][j].Counter { 
+						temp[i][j].Counter = tempLocal[i][j].Counter
+					} else if tempLocal[i][j].Counter == temp[i][j].Counter { 
 						switch {
 						case (s1==types.OS_UnacceptedOrder && s2==types.OS_UnacceptedOrder):
 							s1 = types.OS_AcceptedOrder
@@ -81,33 +72,33 @@ func combineMaps(local_ID string, local_map map[string][constants.N_FLOORS][cons
 							s2=s1
 							break
 							}	
-						temp_local[i][j].State=s1
+						tempLocal[i][j].State=s1
 						temp[i][j].State=s2
 					} else {
-						presedence:=getPresedence(temp_local[i][j],temp[i][j])
-						temp_local[i][j].State = presedence.State
+						presedence:=getPresedence(tempLocal[i][j],temp[i][j])
+						tempLocal[i][j].State = presedence.State
 						temp[i][j].State = presedence.State
 					}
-					presedence := getPresedence(temp_local[i][j], temp[i][j])
-					temp_local[i][j].Counter = presedence.Counter
+					presedence := getPresedence(tempLocal[i][j], temp[i][j])
+					tempLocal[i][j].Counter = presedence.Counter
 					temp[i][j].Counter = presedence.Counter
 
 					//Check if FSM should get local orders updated-signal
-					if (key == local_ID) && (s1 != s1_was) && (s1 == types.OS_AcceptedOrder) {
-						is_new_local_order = true
+					if (key == localID) && (s1 != s1_was) && (s1 == types.OS_AcceptedOrder) {
+						isNewLocalOrder = true
 					} 
 				}
 				}
-				map_2[key] = temp
-				local_map[key] = temp_local
+				map2[key] = temp
+				localMap[key] = tempLocal
 			}
 			}
 		
-		return local_map, is_new_local_order
+		return localMap, isNewLocalOrder
 }
 
-func removeDuplicates(elev_orders map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order {//returntype
-	var tmp_list [constants.N_ELEVATORS]string;
+/*func removeDuplicates(elevOrders map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order) map[string][constants.N_FLOORS][constants.N_BUTTONS]types.Order {//returntype
+	var tmpList [constants.N_ELEVATORS]string;
 	
 	index := 0
 
@@ -143,6 +134,7 @@ func removeDuplicates(elev_orders map[string][constants.N_FLOORS][constants.N_BU
 	}
 	return elev_orders
 }
+*/
 	
 
 	

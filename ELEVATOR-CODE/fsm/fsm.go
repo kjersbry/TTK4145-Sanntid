@@ -31,7 +31,7 @@ func FSM(floorReached <-chan bool, clearFloor chan<- int, orderAdded <-chan bool
 			}
 
 		case <-orderAdded:
-			state, dir, start_timer := onListUpdate()
+			state, dir, startTimer := onListUpdate()
 			if startTimer {
 				clearFloor <- states.ReadLocalElevator().Floor
 			}
@@ -91,7 +91,7 @@ func onListUpdate() (types.ElevatorState, elevio.MotorDirection, bool) {
 
 	state := states.ReadLocalElevator().State
 	dir := states.ReadLocalElevator().Direction
-	start_timer := false
+	startTimer := false
 
 	switch state {
 	case types.ES_DoorOpen:
