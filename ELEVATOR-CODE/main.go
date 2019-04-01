@@ -42,38 +42,37 @@ func main() {
 	//initialization
 	localID := localip.GetPeerID()
 	elevio.Init("localhost:" + serverPort, constants.N_FLOORS)
-	drvButtons := make(chan elevio.ButtonEvent)
-	drvFloors := make(chan int)
-	orderAdded := make(chan bool)
-	doorTimeout := make(chan bool)
-	startDoorTimer := make(chan bool)
-	floorReached := make(chan bool)
+	drvButtons 		:= make(chan elevio.ButtonEvent)
+	drvFloors 		:= make(chan int)
+	orderAdded 		:= make(chan bool)
+	doorTimeout 	:= make(chan bool)
+	startDoorTimer 	:= make(chan bool)
+	floorReached 	:= make(chan bool)
 
 	//Server channels
-	clearFloor := make(chan int)
-	updateState := make(chan types.ElevatorState)
-	updateFloor := make(chan int)
+	clearFloor 		:= make(chan int)
+	updateState 	:= make(chan types.ElevatorState)
 	updateDirection := make(chan elevio.MotorDirection)
 
-	elevRX := make(chan types.WrappedElevator)
-	elevTX := make(chan types.WrappedElevator)
+	elevRX 			:= make(chan types.WrappedElevator)
+	elevTX 			:= make(chan types.WrappedElevator)
 
 	go elevio.PollFloorSensor(drvFloors) 
 	states.InitElevators(localID, drvFloors) 
 
 	//Connections
 	operationUpdate := make(chan types.OperationEvent)  
-	connectionUpdate := make(chan types.ConnectionEvent) 
-	go peers.ConnectionObserver(33924, connectionUpdate, localID)
+	connUpdate 		:= make(chan types.ConnectionEvent) 
+	go peers.ConnectionObserver(33924, connUpdate, localID)
 	go peers.ConnectionTransmitter(33924, localID) 
-	go operation.OperationObserver(operationUpdate, localID)  //This should not be under the commment "connections"
+	go operation.OperationObserver(operationUpdate, localID)
 	go bcast.Transmitter(33922, elevTX)
 	go bcast.Receiver(33922, elevRX)
 
 	//run
 	go elevio.PollButtons(drvButtons)
-	go states.UpdateElevator(updateState, drvFloors, updateDirection, clearFloor, floorReached, orderAdded, drvButtons, elevRX, elevTX, connectionUpdate, operationUpdate)
-	go fsm.FSM(floorReached, clearFloor, orderAdded, startDoorTimer, doorTimeout, updateState, updateFloor, updateDirection)
+	go states.UpdateElevator(updateState, drvFloors, updateDirection, clearFloor, floorReached, orderAdded, drvButtons, elevRX, elevTX, connUpdate, operationUpdate)
+	go fsm.FSM(floorReached, clearFloor, orderAdded, startDoorTimer, doorTimeout, updateState, updateDirection)
 	go timer.DoorTimer(startDoorTimer, doorTimeout)
 
 	/*Infinite loop: */

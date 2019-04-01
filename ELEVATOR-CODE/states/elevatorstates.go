@@ -89,7 +89,7 @@ func UpdateElevator(
 				break
 			}
 
-			if !keyExists(received.ElevatorID) {
+			if _, exists := all_elevators[received.ElevatorID] ; !exists {
 				all_elevators[received.ElevatorID] = unwrapElevator(received)
 				setOperational(true, received.ElevatorID)
 				setConnected(true, received.ElevatorID)
@@ -142,7 +142,7 @@ func UpdateElevator(
 
 func wrapElevator(elevatorID string) types.WrappedElevator {
 	var wrapped types.WrappedElevator
-	if keyExists(elevatorID) {
+	if _, exists := all_elevators[elevatorID] ; exists {
 		temp := all_elevators[elevatorID] 
 		wrapped.ElevatorID = temp.ElevatorID
 		wrapped.State = temp.State

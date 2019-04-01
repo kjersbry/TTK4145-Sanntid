@@ -8,7 +8,7 @@ import (
 )
 
 func FSM(floorReached <-chan bool, clearFloor chan<- int, orderAdded <-chan bool, startDoorTimer chan<- bool, doorTimeout <-chan bool,
-	updateState chan<- types.ElevatorState, updateFloor chan<- int, updateDirection chan<- elevio.MotorDirection /*, ...chans*/) {
+	updateState chan<- types.ElevatorState, updateDirection chan<- elevio.MotorDirection /*, ...chans*/) {
 	for {
 		select {
 		case <-floorReached:
