@@ -21,7 +21,7 @@ func InitElevators(localID string, drvFloors <-chan int) {
 
 	//Initialize local elevator
 	var emptyElevator types.Elevator
-	emptyElevator.Elevator_ID = localelev_ID
+	emptyElevator.ElevatorID = localelev_ID
 	all_elevators[localelev_ID] = emptyElevator
 
 	var ord [constants.N_FLOORS][constants.N_BUTTONS](types.Order)
@@ -55,7 +55,7 @@ func UpdateElevator(
 	updateState <-chan types.ElevatorState, updateFloor <-chan int, updateDirection <-chan elevio.MotorDirection,
 	clearFloor <-chan int, floorReached chan<- bool, localOrderAdded chan<- bool, drvButton <-chan elevio.ButtonEvent,
 	/*I/O channels for interface/communicating with other elevators*/
-	elevRx <-chan types.Wrapped_Elevator, elevTx chan<- types.Wrapped_Elevator, connectionUpdate <-chan types.Connection_Event, operationUpdate <-chan types.Operation_Event) {
+	elevRx <-chan types.WrappedElevator, elevTx chan<- types.WrappedElevator, connectionUpdate <-chan types.ConnectionEvent, operationUpdate <-chan types.OperationEvent) {
 	
 	tick := time.NewTicker(time.Millisecond*constants.TRANSMIT_MS)
 	for {
@@ -72,8 +72,8 @@ func UpdateElevator(
 
 		case buttonPress := <-drvButton:
 			assignedOrder := orders.AssignOrder(all_elevators, localelev_ID, buttonPress)
-			setOrdered(assignedOrder.Order.Floor, int(assignedOrder.Order.Button), assignedOrder.Elevator_ID, false)
-			if assignedOrder.Elevator_ID == localelev_ID && assignedOrder.Order.Button == elevio.BT_Cab {
+			setOrdered(assignedOrder.Order.Floor, int(assignedOrder.Order.Button), assignedOrder.ElevatorID, false)
+			if assignedOrder.ElevatorID == localelev_ID && assignedOrder.Order.Button == elevio.BT_Cab {
 				localOrderAdded <- true
 				lamps.SetAllLamps(localelev_ID, all_elevators)
 			}
@@ -82,20 +82,20 @@ func UpdateElevator(
 			lamps.SetAllLamps(localelev_ID, all_elevators)
 
 		case received := <- elevRx:
-			if received.Elevator_ID == localelev_ID {
+			if received.ElevatorID == localelev_ID {
 				break
 			}
-			if received.Elevator_ID == "NOTFOUND" {
+			if received.ElevatorID == "NOTFOUND" {
 				break
 			}
 
-			if !keyExists(received.Elevator_ID) {
-				all_elevators[received.Elevator_ID] = unwrapElevator(received)
-				setOperational(true, received.Elevator_ID)
-				setConnected(true, received.Elevator_ID)
+			if !keyExists(received.ElevatorID) {
+				all_elevators[received.ElevatorID] = unwrapElevator(received)
+				setOperational(true, received.ElevatorID)
+				setConnected(true, received.ElevatorID)
 				fmt.Printf("\nAdded new elevator!\n")
 			} else {
-				setFields(received.State, received.Floor, received.Direction, received.Elevator_ID)
+				setFields(received.State, received.Floor, received.Direction, received.ElevatorID)
 			}
 
 			//Update orders
@@ -109,11 +109,11 @@ func UpdateElevator(
 			}
 
 		case update := <-connectionUpdate:
-			setConnected(update.Connected, update.Elevator_ID)
-			if !update.Connected {
-				fmt.Printf("\n%v has been disconnected\n", update.Elevator_ID)
+			setConnected(update.IsConnected, update.ElevatorID)
+			if !update.IsConnected {
+				fmt.Printf("\n%v has been disconnected\n", update.ElevatorID)
 
-				elev, isNewLocalOrder := orders.OrderReassigner(update.Elevator_ID, localelev_ID, all_elevators)
+				elev, isNewLocalOrder := orders.OrderReassigner(update.ElevatorID, localelev_ID, all_elevators)
 				setOrderList(elev.Orders, localelev_ID)
 				if isNewLocalOrder {
 					localOrderAdded <- true
@@ -122,11 +122,11 @@ func UpdateElevator(
 			}
 
 		case update := <-operationUpdate:
-			setOperational(update.Is_Operational, update.Elevator_ID)
+			setOperational(update.IsOperational, update.ElevatorID)
 
-			if !update.Is_Operational && update.Elevator_ID != localelev_ID { 
-				fmt.Printf("\nID: %v has been marked as not operational\n", update.Elevator_ID)
-				elev, isNewLocalOrder := orders.OrderReassigner(update.Elevator_ID, localelev_ID, all_elevators)
+			if !update.IsOperational && update.ElevatorID != localelev_ID { 
+				fmt.Printf("\nID: %v has been marked as not operational\n", update.ElevatorID)
+				elev, isNewLocalOrder := orders.OrderReassigner(update.ElevatorID, localelev_ID, all_elevators)
 				setOrderList(elev.Orders, localelev_ID)
 				if isNewLocalOrder {
 					localOrderAdded <- true
@@ -140,28 +140,28 @@ func UpdateElevator(
 	}
 }
 
-func wrapElevator(elevator_ID string) types.Wrapped_Elevator {
-	var wrapped types.Wrapped_Elevator
-	if keyExists(elevator_ID) {
-		temp := all_elevators[elevator_ID] 
-		wrapped.Elevator_ID = temp.Elevator_ID
+func wrapElevator(elevatorID string) types.WrappedElevator {
+	var wrapped types.WrappedElevator
+	if keyExists(elevatorID) {
+		temp := all_elevators[elevatorID] 
+		wrapped.ElevatorID = temp.ElevatorID
 		wrapped.State = temp.State
 		wrapped.Floor = temp.Floor
 		wrapped.Direction = temp.Direction
 		wrapped.Orders = getOrderMap(all_elevators)
 	} else {
-		wrapped.Elevator_ID = "NOTFOUND"
+		wrapped.ElevatorID = "NOTFOUND"
 	}
 	return wrapped
 }
 
-func unwrapElevator(wrapped types.Wrapped_Elevator) types.Elevator {
+func unwrapElevator(wrapped types.WrappedElevator) types.Elevator {
 	var unwrapped types.Elevator
-	unwrapped.Elevator_ID = wrapped.Elevator_ID
+	unwrapped.ElevatorID = wrapped.ElevatorID
 	unwrapped.State = wrapped.State
 	unwrapped.Floor = wrapped.Floor
 	unwrapped.Direction = wrapped.Direction
-	unwrapped.Orders = wrapped.Orders[wrapped.Elevator_ID]
+	unwrapped.Orders = wrapped.Orders[wrapped.ElevatorID]
 	return unwrapped
 }
 
@@ -200,7 +200,7 @@ func setFromOrderMap(orderMap map[string][constants.N_FLOORS][constants.N_BUTTON
 func setID(ID string) {
 	temp, is := all_elevators[ID]
 	if is {
-		temp.Elevator_ID = ID
+		temp.ElevatorID = ID
 		all_elevators[ID] = temp
 	}
 }
@@ -238,7 +238,7 @@ func setDir(d elevio.MotorDirection, ID string) {
 func setOperational(val bool, ID string) {
 	temp, is := all_elevators[ID]
 	if is {
-		temp.Is_Operational = val
+		temp.IsOperational = val
 		all_elevators[ID] = temp
 	}
 }
@@ -246,7 +246,7 @@ func setOperational(val bool, ID string) {
 func setConnected(val bool, ID string) {
 	temp, is := all_elevators[ID]
 	if is {
-		temp.Connected = val
+		temp.IsConnected = val
 		all_elevators[ID] = temp
 	}
 }

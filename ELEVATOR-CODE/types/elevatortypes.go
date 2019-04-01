@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 	"strconv"
-
 	"../constants"
 	"../elevio"
 )
@@ -30,36 +29,36 @@ type Order struct {
 }
 
 type AssignedOrder struct { 
-	Elevator_ID string
+	ElevatorID string
 	Order       elevio.ButtonEvent
 }
 
 type Elevator struct {
-	Elevator_ID    string
+	ElevatorID    string
 	State          ElevatorState
 	Floor          int
-	Direction      elevio.MotorDirection //does only change to stop when IDLE, not when stopping for order
-	Is_Operational bool
-	Connected      bool //todo --> is
+	Direction      elevio.MotorDirection
+	IsOperational bool
+	IsConnected      bool
 	Orders         [constants.N_FLOORS][constants.N_BUTTONS]Order
 }
 
-type Wrapped_Elevator struct {
-	Elevator_ID string
+type WrappedElevator struct {
+	ElevatorID string
 	State       ElevatorState
 	Floor       int
-	Direction   elevio.MotorDirection //does only change to stop when IDLE, not when stopping for order
+	Direction   elevio.MotorDirection
 	Orders      map[string][constants.N_FLOORS][constants.N_BUTTONS]Order
 }
 
-type Operation_Event struct {
-	Elevator_ID    string
-	Is_Operational bool
+type OperationEvent struct {
+	ElevatorID    string
+	IsOperational bool
 }
 
-type Connection_Event struct {
-	Elevator_ID string
-	Connected   bool
+type ConnectionEvent struct {
+	ElevatorID string
+	IsConnected   bool
 }
 
 /*The below functions are used for debugging*/

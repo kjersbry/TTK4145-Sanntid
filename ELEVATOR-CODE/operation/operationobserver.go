@@ -19,9 +19,9 @@ type operationInfo struct {
 	isOperational bool
 }
 
-func OperationObserver(operationUpdate chan<- types.Operation_Event, localID string) {
+func OperationObserver(operationUpdate chan<- types.OperationEvent, localID string) {
 	var elevMap map[string]types.Elevator 
-	var update types.Operation_Event
+	var update types.OperationEvent
 	lastChange := make(map[string]operationInfo)
 	var temp operationInfo
 
@@ -38,8 +38,8 @@ func OperationObserver(operationUpdate chan<- types.Operation_Event, localID str
 				} else {
 					if lastChange[k].lastFloor != v.Floor {
 						if lastChange[k].isOperational == false {
-							update.Elevator_ID = k
-							update.Is_Operational = true
+							update.ElevatorID = k
+							update.IsOperational = true
 							operationUpdate <- update
 						}
 						temp = operationInfo{v.Floor, time.Now(), true} 
@@ -48,8 +48,8 @@ func OperationObserver(operationUpdate chan<- types.Operation_Event, localID str
 						if lastChange[k].isOperational == true { 
 							temp = operationInfo{lastChange[k].lastFloor, lastChange[k].timeOfChange, false}
 							lastChange[k] = temp 
-							update.Elevator_ID = k
-							update.Is_Operational = false
+							update.ElevatorID = k
+							update.IsOperational = false
 							operationUpdate <- update				
 						} 
 					}

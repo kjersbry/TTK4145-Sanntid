@@ -40,13 +40,13 @@ func assignAlgorithm(newOrder elevio.ButtonEvent, elevators map[string]types.Ele
 
 	i := 0
 	for _, elev := range elevators {
-		if elev.Is_Operational && elev.Connected {
+		if elev.IsOperational && elev.IsConnected {
 			elev.Orders[newOrder.Floor][newOrder.Button].State = types.OS_AcceptedOrder
 			currentDuration = timeToIdle(elev)
 			
 			if (currentDuration < bestDuration) || i == 0 {
 				bestDuration = currentDuration
-				bestChoice = elev.Elevator_ID
+				bestChoice = elev.ElevatorID
 			}
 			i = 1
 		}

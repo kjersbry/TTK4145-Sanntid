@@ -12,7 +12,7 @@ func SetAllLamps(localID string, elevators map[string]types.Elevator){
 		for j:= 0; j < constants.N_BUTTONS - 1 ; j++ {
 			isSomeHallCall := false
 			for key, val := range elevators {
-				if orders.IsOrder(val, i, elevio.ButtonType(j)) && val.Is_Operational {
+				if orders.IsOrder(val, i, elevio.ButtonType(j)) && val.IsOperational {
 					isSomeHallCall = true
 				} 
 				if key == localID {

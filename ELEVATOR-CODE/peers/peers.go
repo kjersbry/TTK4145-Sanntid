@@ -25,11 +25,11 @@ func ConnectionTransmitter(port int, localID string) {
 	}
 }
 
-func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event, localID string) {
+func ConnectionObserver(port int, connectionUpdate chan<- types.ConnectionEvent, localID string) {
 
 	var buf [1024]byte
 	var lostConnections []string
-	var update types.Connection_Event
+	var update types.ConnectionEvent
 	lastSeen := make(map[string]time.Time)
 
 	conn := conn.DialBroadcastUDP(port)
@@ -45,7 +45,7 @@ func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event
 
 				for i, savedID := range lostConnections {
 					if savedID == id {
-						update = types.Connection_Event{savedID, true}
+						update = types.ConnectionEvent{savedID, true}
 						connectionUpdate <- update
 						lostConnections = append(lostConnections[:i], lostConnections[i+1:]...)
 					}
@@ -56,7 +56,7 @@ func ConnectionObserver(port int, connectionUpdate chan<- types.Connection_Event
 
 		for elevID, lastTime := range lastSeen {
 			if time.Now().Sub(lastTime) > timeout {
-				update = types.Connection_Event{elevID, false}
+				update = types.ConnectionEvent{elevID, false}
 				connectionUpdate <- update
 				lostConnections = append(lostConnections, elevID)
 				delete(lastSeen, elevID)
