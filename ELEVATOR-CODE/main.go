@@ -24,14 +24,14 @@ import (
 15657, 59334, 46342, 33922, 50945, 36732*/
 
 func main() {
-	var spawn_sim string
-	var server_port string
+	var spawnSim string
+	var serverPort string
 
-	flag.IntVar(&server_port, "sport", "15657", "port for the elevator server")
-	flag.StringVar(&spawn_sim, "sim", "no", "set -sim=yes if you want to spawn simulator")
+	flag.IntVar(&serverPort, "sport", "15657", "port for the elevator server")
+	flag.StringVar(&spawnSim, "sim", "no", "set -sim=yes if you want to spawn simulator")
 	flag.Parse()
 
-	if spawn_sim == "yes" {
+	if spawnSim == "yes" {
 		newProcess := exec.Command("gnome-terminal", "-x", "sh", "-c", "./SimElevatorServer --port " + server_port)
 		err := newProcess.Run()
 		if err != nil {
@@ -42,43 +42,42 @@ func main() {
 	}
 
 	//initialization
-	local_ID := localip.GetPeerID()
+	localID := localip.GetPeerID()
 	elevio.Init("localhost:" + server_port, constants.N_FLOORS)
-	drv_buttons := make(chan elevio.ButtonEvent)
-	drv_floors := make(chan int)
-	order_added := make(chan bool)
-	add_order := make(chan types.AssignedOrder) 
-	door_timeout := make(chan bool)
-	start_door_timer := make(chan bool)
-	floor_reached := make(chan bool)
+	drvButtons := make(chan elevio.ButtonEvent)
+	drvFloors := make(chan int)
+	orderAdded := make(chan bool)
+	addOrder := make(chan types.AssignedOrder) 
+	doorTimeout := make(chan bool)
+	startDoorTimer := make(chan bool)
+	floorReached := make(chan bool)
 
 	//Server channels
-	clear_floor := make(chan int)
-	update_state := make(chan types.ElevatorState)
-	update_floor := make(chan int)
-	update_direction := make(chan elevio.MotorDirection)
+	clearFloor := make(chan int)
+	updateState := make(chan types.ElevatorState)
+	updateFloor := make(chan int)
+	updateDirection := make(chan elevio.MotorDirection)
 
-	elev_rx := make(chan types.Wrapped_Elevator)
-	elev_tx := make(chan types.Wrapped_Elevator)
+	elevRX := make(chan types.Wrapped_Elevator)
+	elevTX := make(chan types.Wrapped_Elevator)
 
-	go elevio.PollFloorSensor(drv_floors)
-	states.InitElevators(local_ID, drv_floors)
+	go elevio.PollFloorSensor(drvFloors) 
+	states.InitElevators(localID, drvFloors) 
 
 	//Connections
-	operation_update := make(chan types.Operation_Event)  
-	connection_update := make(chan types.Connection_Event) 
-	go peers.ConnectionObserver(33924, connection_update, local_ID)
-	go peers.ConnectionTransmitter(33924, local_ID)
-	go operation.OperationObserver(operation_update, local_ID)
-	go bcast.Transmitter(33922, elev_tx)
-	go bcast.Receiver(33922, elev_rx)
+	operationUpdate := make(chan types.Operation_Event)  
+	connectionUpdate := make(chan types.Connection_Event) 
+	go peers.ConnectionObserver(33924, connectionUpdate, localID)
+	go peers.ConnectionTransmitter(33924, localID) 
+	go operation.OperationObserver(operationUpdate, localID)  //This should not be under the commment "connections"
+	go bcast.Transmitter(33922, elevTX)
+	go bcast.Receiver(33922, elevRX)
 
 	//run
-	go elevio.PollButtons(drv_buttons)
-	go states.UpdateElevator(update_state, drv_floors, update_direction, clear_floor, floor_reached, order_added, add_order, elev_rx, elev_tx, connection_update, operation_update)
-	go fsm.FSM(floor_reached, clear_floor, order_added, start_door_timer, door_timeout, update_state, update_floor, update_direction)
-	go orders.AssignOrder(drv_buttons, add_order, local_ID)
-	go timer.DoorTimer(start_door_timer, door_timeout)
+	go elevio.PollButtons(drvButtons)
+	go states.UpdateElevator(updateState, drvFloors, updateDirection, clearFloor, floorReached, orderAdded, addOrder, elevRX, elevTX, connectionUpdate, operationUpdate)
+	go fsm.FSM(floorReached, clearFloor, orderAdded, startDoorTimer, doorTimeout, updateState, updateFloor, updateDirection)
+	go timer.DoorTimer(startDoorTimer, doorTimeout)
 
 	/*Infinite loop: */
 	fin := make(chan int)
