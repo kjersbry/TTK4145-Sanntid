@@ -64,7 +64,6 @@ func ShouldStop(e types.Elevator) bool {
             IsOrder(e, e.Floor, elevio.BT_Cab)      ||
             !isOrderAbove(e))
     case elevio.MD_Stop:
-    default:
     }
     return true
 }
