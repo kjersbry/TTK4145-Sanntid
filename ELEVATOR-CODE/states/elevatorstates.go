@@ -53,9 +53,9 @@ func InitElevators(localID string, drvFloors <-chan int) {
 func UpdateElevator(
 	/*I/O Channels for handling FSM*/
 	updateState <-chan types.ElevatorState, updateFloor <-chan int, updateDirection <-chan elevio.MotorDirection,
-	clearFloor <-chan int, floorReached chan<- bool, localOrderAdded chan<- bool,
-	/*I/O channels for communicating with other elevators*/
-	addOrder <-chan types.AssignedOrder, elevRx <-chan types.Wrapped_Elevator, elevTx chan<- types.Wrapped_Elevator, connectionUpdate <-chan types.Connection_Event, operationUpdate <-chan types.Operation_Event) {
+	clearFloor <-chan int, floorReached chan<- bool, localOrderAdded chan<- bool, drvButton <-chan elevio.ButtonEvent,
+	/*I/O channels for interface/communicating with other elevators*/
+	elevRx <-chan types.Wrapped_Elevator, elevTx chan<- types.Wrapped_Elevator, connectionUpdate <-chan types.Connection_Event, operationUpdate <-chan types.Operation_Event) {
 	
 	tick := time.NewTicker(time.Millisecond*constants.TRANSMIT_MS)
 	for {
@@ -70,9 +70,10 @@ func UpdateElevator(
 		case newDir := <-updateDirection:
 			setDir(newDir, localelev_ID)
 
-		case order := <- addOrder:
-			setOrdered(order.Order.Floor, int(order.Order.Button), order.Elevator_ID, false)
-			if order.Elevator_ID == localelev_ID && order.Order.Button == elevio.BT_Cab {
+		case buttonPress := <-drvButton:
+			assignedOrder := orders.AssignOrder(all_elevators, localelev_ID, buttonPress)
+			setOrdered(assignedOrder.Order.Floor, int(assignedOrder.Order.Button), assignedOrder.Elevator_ID, false)
+			if assignedOrder.Elevator_ID == localelev_ID && assignedOrder.Order.Button == elevio.BT_Cab {
 				localOrderAdded <- true
 				lamps.SetAllLamps(localelev_ID, all_elevators)
 			}

@@ -92,17 +92,6 @@ func PrintOrders(e Elevator) {
 	fmt.Printf("\n----------------\n\n")
 }
 
-func PrintOrders2(o [constants.N_FLOORS][constants.N_BUTTONS]Order) {
-	fmt.Printf("\n\n-----Queue------\n")
-	for i := 0; i < constants.N_FLOORS; i++ {
-		for j := 0; j < constants.N_BUTTONS; j++ {
-			fmt.Printf("%s ", OrderToString(o[i][j]))
-		}
-		fmt.Printf("\n")
-	}
-	fmt.Printf("\n----------------\n\n")
-}
-
 func DirToString(dir elevio.MotorDirection) string {
 	var result string
 	switch dir {

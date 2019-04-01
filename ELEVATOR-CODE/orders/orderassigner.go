@@ -2,29 +2,20 @@ package orders
 
 import (
 	"../elevio"
-	"../states"
 	"../types"
 	"../constants"	
 )
 
-func AssignOrder(drvButton <-chan elevio.ButtonEvent, addOrder chan<- types.AssignedOrder, localID string) {
-	
-	var assignedOrder types.AssignedOrder
+func AssignOrder(elevators map[string]types.Elevator, localID string, order elevio.ButtonEvent) types.AssignedOrder {
 
-	for {
-		select {
-		case order := <-drvButton:
-			if order.Button == elevio.BT_Cab {
-				assignedOrder = types.AssignedOrder{localID, order}
-				addOrder <- assignedOrder
-			} else {
-				elevs := states.ReadAllElevators()
-				var selectedElevator = assignAlgorithm(order, elevs)
-				assignedOrder := types.AssignedOrder{selectedElevator, order}
-				addOrder <- assignedOrder
-			}
-		}
+	var assignedOrder types.AssignedOrder
+	if order.Button == elevio.BT_Cab {
+		assignedOrder = types.AssignedOrder{localID, order}
+	} else {
+		var selectedElevator = assignAlgorithm(order, elevators)
+		assignedOrder = types.AssignedOrder{selectedElevator, order}
 	}
+	return assignedOrder
 }
 
 func OrderReassigner(faultyElevID string, localID string, allElevators map[string]types.Elevator) (types.Elevator, bool) {
@@ -34,7 +25,7 @@ func OrderReassigner(faultyElevID string, localID string, allElevators map[strin
 	for i := 0; i < constants.N_FLOORS; i++ {
 		for j := 0; j < constants.N_BUTTONS-1; j++ {
 			if e.Orders[i][j].State == types.OS_AcceptedOrder {
-				localElev[i][j] = types.OS_AcceptedOrder
+				localElev.Orders[i][j].State = types.OS_AcceptedOrder
 				isNewLocalOrder = true
 			}
 		}
@@ -49,15 +40,16 @@ func assignAlgorithm(newOrder elevio.ButtonEvent, elevators map[string]types.Ele
 
 	i := 0
 	for _, elev := range elevators {
-		//if operational and connected
-		elev.Orders[newOrder.Floor][newOrder.Button].State = types.OS_AcceptedOrder
-		currentDuration = timeToIdle(elev)
-		
-		if (currentDuration < bestDuration) || i == 0 {
-			bestDuration = currentDuration
-			bestChoice = elev.Elevator_ID
+		if elev.Is_Operational && elev.Connected {
+			elev.Orders[newOrder.Floor][newOrder.Button].State = types.OS_AcceptedOrder
+			currentDuration = timeToIdle(elev)
+			
+			if (currentDuration < bestDuration) || i == 0 {
+				bestDuration = currentDuration
+				bestChoice = elev.Elevator_ID
+			}
+			i = 1
 		}
-		i = 1
 	}
 
 	return bestChoice
@@ -70,7 +62,7 @@ func timeToIdle(e types.Elevator) float64 {
 
 	switch e.State { 
 	case types.ES_Idle:
-		e.Direction = orders.ChooseDirection(e)
+		e.Direction = ChooseDirection(e)
 		if e.Direction == elevio.MD_Stop {
 			return duration
 		}
@@ -84,7 +76,7 @@ func timeToIdle(e types.Elevator) float64 {
 	}
 
 	for {
-		if orders.ShouldStop(e) {
+		if ShouldStop(e) {
 			for button := 0; button < constants.N_BUTTONS; button++ {
 				if e.Floor < 0 || e.Floor >= constants.N_FLOORS {
 
@@ -92,7 +84,7 @@ func timeToIdle(e types.Elevator) float64 {
 				e.Orders[e.Floor][button].State = types.OS_NoOrder
 			}
 			
-			e.Direction = orders.ChooseDirection(e)
+			e.Direction = ChooseDirection(e)
 			if e.Direction == elevio.MD_Stop {
 				return duration
 			}
